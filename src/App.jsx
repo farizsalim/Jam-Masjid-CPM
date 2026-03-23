@@ -153,21 +153,21 @@ function App() {
       <div className="absolute top-1/2 left-1/2 w-[500px] h-[500px] bg-amber-400/15 rounded-full blur-3xl transform -translate-x-1/2 -translate-y-1/2"></div>
 
       {/* Header */}
-      <header className="relative h-[12vh] px-6 lg:px-10 pt-3 z-10">
+      <header className="relative h-[11vh] px-4 lg:px-8 pt-2 z-10">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 lg:w-16 lg:h-16 bg-gradient-to-br from-amber-500 to-amber-700 rounded-2xl shadow-2xl flex items-center justify-center border-2 border-amber-300">
-              <span className="text-3xl lg:text-4xl text-white">🕌</span>
+          <div className="flex items-center gap-3 lg:gap-4">
+            <div className="w-10 h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-amber-500 to-amber-700 rounded-xl shadow-2xl flex items-center justify-center border border-amber-300">
+              <span className="text-xl lg:text-2xl text-white">🕌</span>
             </div>
             <div>
-              <h1 className="text-base sm:text-lg lg:text-xl xl:text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-200 to-amber-400">
+              <h1 className="text-xs sm:text-sm lg:text-base xl:text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-200 to-amber-400">
                 MASJID AL IHSAN BAKRIE PT.CPM
               </h1>
-              <p className="text-xs sm:text-sm text-emerald-300 tracking-wider mt-0.5">BERKAH • ISTIQOMAH • BERDAYA</p>
+              <p className="text-[8px] sm:text-[10px] text-emerald-300 tracking-wider">BERKAH • ISTIQOMAH • BERDAYA</p>
             </div>
           </div>
-          <div className="bg-gradient-to-br from-emerald-900/90 to-emerald-950/90 backdrop-blur-2xl rounded-2xl px-5 py-2 shadow-2xl border border-amber-500/50">
-            <div className="text-xs sm:text-sm text-emerald-200">
+          <div className="bg-gradient-to-br from-emerald-900/90 to-emerald-950/90 backdrop-blur-2xl rounded-xl px-3 py-1 shadow-2xl border border-amber-500/50">
+            <div className="text-[8px] sm:text-[10px] text-emerald-200">
               {getDateString()}
             </div>
           </div>
@@ -175,114 +175,114 @@ function App() {
       </header>
 
       {/* Main Content */}
-      <main className="h-[80vh] px-4 lg:px-8 flex gap-5 z-10 relative">
+      <main className="h-[82vh] px-3 lg:px-6 flex gap-4 z-10 relative">
         
         {/* Left Column - Clock */}
         <div className="w-[38%] flex flex-col h-full">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-1 h-5 bg-amber-500 rounded-full"></div>
-            <h2 className="text-xs sm:text-sm font-medium tracking-[0.2em] text-amber-400 uppercase">WAKTU SEKARANG</h2>
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-1 h-4 bg-amber-500 rounded-full"></div>
+            <h2 className="text-[9px] sm:text-[10px] font-medium tracking-[0.2em] text-amber-400 uppercase">WAKTU SEKARANG</h2>
             <div className="flex-1 h-px bg-gradient-to-r from-amber-500 to-transparent"></div>
           </div>
 
-          <div className="flex-1 bg-gradient-to-br from-emerald-900/80 to-emerald-950/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-amber-500/50 p-4 flex flex-col items-center justify-center">
-            {/* Analog Clock - Larger to fill card */}
-            <div className="relative w-full max-w-[450px] mx-auto aspect-square mb-4">
-              <div className="relative w-full h-full rounded-full bg-gradient-to-br from-emerald-800 to-emerald-950 border-[14px] border-amber-500/60 shadow-2xl">
-                {/* Clock numbers - bigger */}
+          <div className="flex-1 bg-gradient-to-br from-emerald-900/80 to-emerald-950/80 backdrop-blur-xl rounded-2xl shadow-2xl border border-amber-500/50 p-3 flex flex-col items-center justify-center">
+            {/* Analog Clock - Balanced size */}
+            <div className="relative w-full max-w-[320px] mx-auto aspect-square mb-3">
+              <div className="relative w-full h-full rounded-full bg-gradient-to-br from-emerald-800 to-emerald-950 border-[10px] border-amber-500/60 shadow-2xl">
+                {/* Clock numbers */}
                 {[12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map(num => {
                   const angle = num * 30
                   return (
                     <div key={num} className="absolute w-full h-full" style={{ transform: `rotate(${angle}deg)` }}>
-                      <span className="absolute top-4 left-1/2 -translate-x-1/2 text-amber-400 font-bold text-xl sm:text-2xl" style={{ transform: `rotate(-${angle}deg)` }}>
+                      <span className="absolute top-2 left-1/2 -translate-x-1/2 text-amber-400 font-bold text-sm sm:text-base" style={{ transform: `rotate(-${angle}deg)` }}>
                         {num}
                       </span>
                     </div>
                   )
                 })}
-                {/* Center point - bigger */}
-                <div className="absolute top-1/2 left-1/2 w-6 h-6 bg-amber-400 rounded-full -translate-x-1/2 -translate-y-1/2 z-20 shadow-lg"></div>
-                {/* Hour hand - thicker */}
-                <div className="absolute bottom-1/2 left-1/2 w-3 h-[28%] bg-gradient-to-t from-amber-400 to-amber-200 rounded-full origin-bottom -translate-x-1/2 transition-transform duration-100" style={{ transform: `translateX(-50%) rotate(${clockAngles.hour}deg)` }}></div>
-                {/* Minute hand - thicker */}
-                <div className="absolute bottom-1/2 left-1/2 w-2 h-[38%] bg-amber-300 rounded-full origin-bottom -translate-x-1/2 transition-transform duration-100" style={{ transform: `translateX(-50%) rotate(${clockAngles.minute}deg)` }}></div>
+                {/* Center point */}
+                <div className="absolute top-1/2 left-1/2 w-4 h-4 bg-amber-400 rounded-full -translate-x-1/2 -translate-y-1/2 z-20 shadow-lg"></div>
+                {/* Hour hand */}
+                <div className="absolute bottom-1/2 left-1/2 w-2 h-[28%] bg-gradient-to-t from-amber-400 to-amber-200 rounded-full origin-bottom -translate-x-1/2 transition-transform duration-100" style={{ transform: `translateX(-50%) rotate(${clockAngles.hour}deg)` }}></div>
+                {/* Minute hand */}
+                <div className="absolute bottom-1/2 left-1/2 w-1.5 h-[38%] bg-amber-300 rounded-full origin-bottom -translate-x-1/2 transition-transform duration-100" style={{ transform: `translateX(-50%) rotate(${clockAngles.minute}deg)` }}></div>
                 {/* Second hand */}
                 <div className="absolute bottom-1/2 left-1/2 w-1 h-[44%] bg-red-400 rounded-full origin-bottom -translate-x-1/2 transition-transform duration-100" style={{ transform: `translateX(-50%) rotate(${clockAngles.second}deg)` }}></div>
               </div>
             </div>
             
-            {/* Digital Time - bigger */}
-            <div className="flex justify-center items-center gap-4 bg-emerald-950/50 rounded-xl p-4 border border-amber-500/30 w-full">
-              <div className="text-5xl sm:text-6xl font-mono font-bold text-amber-300">{hours}</div>
-              <span className="text-4xl sm:text-5xl text-amber-500">:</span>
-              <div className="text-5xl sm:text-6xl font-mono font-bold text-amber-300">{minutes}</div>
-              <span className="text-4xl sm:text-5xl text-amber-500">:</span>
-              <div className="text-5xl sm:text-6xl font-mono font-bold text-amber-300">{seconds}</div>
+            {/* Digital Time - Balanced */}
+            <div className="flex justify-center items-center gap-2 bg-emerald-950/50 rounded-lg p-2 border border-amber-500/30 w-full">
+              <div className="text-2xl sm:text-3xl font-mono font-bold text-amber-300">{hours}</div>
+              <span className="text-xl sm:text-2xl text-amber-500">:</span>
+              <div className="text-2xl sm:text-3xl font-mono font-bold text-amber-300">{minutes}</div>
+              <span className="text-xl sm:text-2xl text-amber-500">:</span>
+              <div className="text-2xl sm:text-3xl font-mono font-bold text-amber-300">{seconds}</div>
             </div>
           </div>
         </div>
         
         {/* Right Column - Prayer Times */}
         <div className="w-[62%] flex flex-col h-full">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-1 h-5 bg-amber-500 rounded-full"></div>
-            <h2 className="text-xs sm:text-sm font-medium tracking-[0.2em] text-amber-400 uppercase">JADWAL SHOLAT HARIAN</h2>
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-1 h-4 bg-amber-500 rounded-full"></div>
+            <h2 className="text-[9px] sm:text-[10px] font-medium tracking-[0.2em] text-amber-400 uppercase">JADWAL SHOLAT HARIAN</h2>
             <div className="flex-1 h-px bg-gradient-to-r from-amber-500 to-transparent"></div>
           </div>
           
-          <div className="flex-1 bg-gradient-to-br from-emerald-900/80 to-emerald-950/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-amber-500/50 flex flex-col overflow-hidden">
+          <div className="flex-1 bg-gradient-to-br from-emerald-900/80 to-emerald-950/80 backdrop-blur-xl rounded-2xl shadow-2xl border border-amber-500/50 flex flex-col overflow-hidden">
             
             {/* Next Prayer Counter */}
             {nextPrayer && timeToNext && (
-              <div className="mx-4 mt-4 p-3 bg-gradient-to-r from-amber-500/20 to-amber-600/20 rounded-xl border border-amber-500/60 text-center flex-shrink-0">
-                <p className="text-amber-300 text-sm uppercase tracking-wider font-medium">
+              <div className="mx-3 mt-3 p-2 bg-gradient-to-r from-amber-500/20 to-amber-600/20 rounded-lg border border-amber-500/60 text-center flex-shrink-0">
+                <p className="text-amber-300 text-[10px] uppercase tracking-wider font-medium">
                   ⟡ MENUJU {nextPrayer.name} {nextPrayer.tomorrow ? '(BESOK)' : ''} ⟡
                 </p>
-                <p className="text-2xl font-mono font-bold text-amber-400 tracking-widest mt-1">
+                <p className="text-base font-mono font-bold text-amber-400 tracking-widest">
                   {String(timeToNext.hours).padStart(2, '0')}:{String(timeToNext.minutes).padStart(2, '0')}:{String(timeToNext.seconds).padStart(2, '0')}
                 </p>
               </div>
             )}
             
             {/* Prayer List - All visible with flex */}
-            <div className="flex-1 px-4 py-4 flex flex-col justify-between">
+            <div className="flex-1 px-3 py-3 flex flex-col justify-between">
               {loading ? (
                 <div className="flex justify-center items-center h-full">
-                  <div className="text-amber-400 animate-pulse text-lg">Memuat jadwal sholat...</div>
+                  <div className="text-amber-400 animate-pulse text-sm">Memuat jadwal sholat...</div>
                 </div>
               ) : error ? (
-                <div className="text-center text-amber-500/70 text-base">{error}</div>
+                <div className="text-center text-amber-500/70 text-xs">{error}</div>
               ) : (
                 prayerTimes.map((prayer, idx) => {
                   const isNext = nextPrayer && nextPrayer.name === prayer.name && !nextPrayer.tomorrow
                   return (
                     <div 
                       key={idx} 
-                      className={`rounded-xl transition-all duration-300 ${
+                      className={`rounded-lg transition-all duration-300 ${
                         isNext 
                           ? 'bg-gradient-to-r from-amber-600/30 to-amber-500/20 border-l-4 border-amber-500' 
                           : 'bg-emerald-800/30 border border-amber-500/30'
                       }`}
                     >
-                      <div className="flex justify-between items-center py-3 px-4">
-                        <div className="flex items-center gap-4">
-                          <span className="text-3xl">{prayer.icon}</span>
+                      <div className="flex justify-between items-center py-2 px-3">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xl">{prayer.icon}</span>
                           <div>
-                            <p className={`text-xl font-bold ${isNext ? 'text-amber-400' : 'text-amber-300'}`}>
+                            <p className={`text-sm font-bold ${isNext ? 'text-amber-400' : 'text-amber-300'}`}>
                               {prayer.name}
                             </p>
-                            <p className="text-sm text-emerald-300/70 mt-0.5" style={{ fontFamily: "'Amiri', serif" }}>
+                            <p className="text-[10px] text-emerald-300/70" style={{ fontFamily: "'Amiri', serif" }}>
                               {prayer.arabic}
                             </p>
                           </div>
                           {isNext && (
-                            <span className="ml-2 px-2 py-1 bg-amber-500 text-emerald-900 text-xs font-bold rounded-full shadow-md">
+                            <span className="ml-1 px-1.5 py-0.5 bg-amber-500 text-emerald-900 text-[8px] font-bold rounded-full">
                               NEXT
                             </span>
                           )}
                         </div>
                         <div className="text-right">
-                          <span className={`text-2xl font-mono font-bold ${isNext ? 'text-amber-400' : 'text-amber-300'}`}>
+                          <span className={`text-sm font-mono font-bold ${isNext ? 'text-amber-400' : 'text-amber-300'}`}>
                             {prayer.time}
                           </span>
                         </div>
@@ -294,19 +294,19 @@ function App() {
             </div>
             
             {/* Footer */}
-            <div className="p-3 border-t border-amber-500/30 text-center bg-emerald-950/40 flex-shrink-0">
-              <p className="text-amber-400/70 text-sm" style={{ fontFamily: "'Amiri', serif" }}>
+            <div className="p-2 border-t border-amber-500/30 text-center bg-emerald-950/40 flex-shrink-0">
+              <p className="text-amber-400/70 text-[9px]" style={{ fontFamily: "'Amiri', serif" }}>
                 حَافِظُوا عَلَى الصَّلَوَاتِ وَالصَّلَاةِ الْوُسْطَىٰ
               </p>
-              <p className="text-emerald-300/60 text-xs mt-1">Peliharalah segala sholat dan sholat wustha (Ashar)</p>
+              <p className="text-emerald-300/60 text-[7px] mt-0.5">Peliharalah segala sholat dan sholat wustha (Ashar)</p>
             </div>
           </div>
         </div>
       </main>
 
       {/* Footer */}
-      <footer className="relative bg-gradient-to-r from-emerald-950 to-emerald-900 border-t border-amber-500/50 py-3 mt-5 z-10">
-        <div className="px-6 flex items-center justify-between text-xs">
+      <footer className="relative bg-gradient-to-r from-emerald-950 to-emerald-900 border-t border-amber-500/50 py-3 mt-1 z-10">
+        <div className="px-4 flex items-center justify-between text-[8px]">
           <p className="text-amber-300">© 2026 Masjid Al Ihsan Bakrie PT.CPM</p>
           <p className="text-amber-400 font-bold">Jadwal Sholat Digital</p>
         </div>

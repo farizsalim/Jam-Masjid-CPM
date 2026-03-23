@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-import './App.css'
 
 function App() {
   const [currentTime, setCurrentTime] = useState(new Date())
@@ -9,17 +8,17 @@ function App() {
   const [error, setError] = useState(null)
   const [nextPrayer, setNextPrayer] = useState(null)
 
+  // Real-time clock update
   useEffect(() => {
-    const timer = setInterval(() => {
+    const clockInterval = setInterval(() => {
       setCurrentTime(new Date())
     }, 1000)
-
-    return () => clearInterval(timer)
+    return () => clearInterval(clockInterval)
   }, [])
 
   // Fetch prayer times from API
   useEffect(() => {
-    const fetchPrayerTimes = async () => {
+    const fetchPrayerSchedule = async () => {
       try {
         const now = new Date()
         const year = now.getFullYear()
@@ -27,335 +26,291 @@ function App() {
         const day = String(now.getDate()).padStart(2, '0')
         
         const response = await fetch(`https://api.myquran.com/v2/sholat/jadwal/2813/${year}/${month}/${day}`)
-        const result = await response.json()
+        const data = await response.json()
         
-        if (result.status) {
-          setLocation(`${result.data.lokasi}, ${result.data.daerah}`)
+        if (data.status) {
+          const jadwal = data.data.jadwal
+          setLocation(`${data.data.lokasi}, ${data.data.daerah}`)
           
-          const formattedPrayerTimes = [
-            { name: 'Imsak', time: result.data.jadwal.imsak, icon: '🌙' },
-            { name: 'Subuh', time: result.data.jadwal.subuh, icon: '⭐' },
-            { name: 'Dzuhur', time: result.data.jadwal.dzuhur, icon: '☀️' },
-            { name: 'Ashar', time: result.data.jadwal.ashar, icon: '🌅' },
-            { name: 'Maghrib', time: result.data.jadwal.maghrib, icon: '🌆' },
-            { name: 'Isya', time: result.data.jadwal.isya, icon: '🌙' }
+          const prayerList = [
+            { name: 'Imsak', time: jadwal.imsak, icon: '🌙', arabic: 'إِمْسَاك' },
+            { name: 'Subuh', time: jadwal.subuh, icon: '⭐', arabic: 'صَلَاةُ الْفَجْرِ' },
+            { name: 'Dzuhur', time: jadwal.dzuhur, icon: '☀️', arabic: 'صَلَاةُ الظُّهْرِ' },
+            { name: 'Ashar', time: jadwal.ashar, icon: '🌅', arabic: 'صَلَاةُ الْعَصْرِ' },
+            { name: 'Maghrib', time: jadwal.maghrib, icon: '🌆', arabic: 'صَلَاةُ الْمَغْرِبِ' },
+            { name: 'Isya', time: jadwal.isya, icon: '🌙', arabic: 'صَلَاةُ الْعِشَاءِ' }
           ]
-          
-          setPrayerTimes(formattedPrayerTimes)
+          setPrayerTimes(prayerList)
           setError(null)
         } else {
-          setError('Gagal mengambil jadwal sholat')
+          setError('Gagal memuat jadwal sholat')
         }
       } catch (err) {
-        setError('Terjadi kesalahan saat mengambil data')
-        console.error('Error fetching prayer times:', err)
+        console.error(err)
+        setError('Koneksi gagal, menggunakan data offline')
+        const fallbackPrayers = [
+          { name: 'Imsak', time: '04:30', icon: '🌙', arabic: 'إِمْسَاك' },
+          { name: 'Subuh', time: '04:45', icon: '⭐', arabic: 'صَلَاةُ الْفَجْرِ' },
+          { name: 'Dzuhur', time: '12:00', icon: '☀️', arabic: 'صَلَاةُ الظُّهْرِ' },
+          { name: 'Ashar', time: '15:15', icon: '🌅', arabic: 'صَلَاةُ الْعَصْرِ' },
+          { name: 'Maghrib', time: '18:00', icon: '🌆', arabic: 'صَلَاةُ الْمَغْرِبِ' },
+          { name: 'Isya', time: '19:15', icon: '🌙', arabic: 'صَلَاةُ الْعِشَاءِ' }
+        ]
+        setPrayerTimes(fallbackPrayers)
+        setLocation('Masjid Al Ihsan, Indonesia')
       } finally {
         setLoading(false)
       }
     }
-
-    fetchPrayerTimes()
+    
+    fetchPrayerSchedule()
   }, [])
 
   // Determine next prayer
   useEffect(() => {
     if (prayerTimes.length > 0) {
       const now = currentTime
-      const currentTimeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
+      const currentHour = now.getHours()
+      const currentMinute = now.getMinutes()
+      const currentTimeStr = `${String(currentHour).padStart(2, '0')}:${String(currentMinute).padStart(2, '0')}`
       
-      let next = null
+      let upcoming = null
       for (let i = 0; i < prayerTimes.length; i++) {
         if (prayerTimes[i].time > currentTimeStr) {
-          next = prayerTimes[i]
+          upcoming = { ...prayerTimes[i], tomorrow: false }
           break
         }
       }
-      
-      if (!next && prayerTimes.length > 0) {
-        next = { ...prayerTimes[0], tomorrow: true }
+      if (!upcoming && prayerTimes.length > 0) {
+        upcoming = { ...prayerTimes[0], tomorrow: true }
       }
-      
-      setNextPrayer(next)
+      setNextPrayer(upcoming)
     }
   }, [prayerTimes, currentTime])
 
-  const formatTime = (date) => {
-    const hours = String(date.getHours()).padStart(2, '0')
-    const minutes = String(date.getMinutes()).padStart(2, '0')
-    const seconds = String(date.getSeconds()).padStart(2, '0')
+  const getFormattedClock = () => {
+    const hours = String(currentTime.getHours()).padStart(2, '0')
+    const minutes = String(currentTime.getMinutes()).padStart(2, '0')
+    const seconds = String(currentTime.getSeconds()).padStart(2, '0')
     return { hours, minutes, seconds }
   }
-
-  const getRotationDegrees = () => {
-    const seconds = currentTime.getSeconds()
-    const minutes = currentTime.getMinutes()
-    const hours = currentTime.getHours()
-    
-    return {
-      second: seconds * 6,
-      minute: minutes * 6 + seconds * 0.1,
-      hour: (hours % 12) * 30 + minutes * 0.5
-    }
-  }
-
-  const { hours, minutes, seconds } = formatTime(currentTime)
-  const { second, minute, hour } = getRotationDegrees()
-
-  const getTimeToNextPrayer = () => {
-    if (!nextPrayer) return null
-    
-    const now = currentTime
-    const [prayerHour, prayerMinute] = nextPrayer.time.split(':').map(Number)
-    let prayerTime = new Date(now)
-    prayerTime.setHours(prayerHour, prayerMinute, 0, 0)
-    
-    if (nextPrayer.tomorrow) {
-      prayerTime.setDate(prayerTime.getDate() + 1)
-    }
-    
-    const diffMs = prayerTime - now
-    if (diffMs <= 0) return null
-    
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
-    const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60))
-    const diffSeconds = Math.floor((diffMs % (1000 * 60)) / 1000)
-    
-    return { hours: diffHours, minutes: diffMinutes, seconds: diffSeconds }
+  
+  const getDateString = () => {
+    return currentTime.toLocaleDateString('id-ID', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    })
   }
   
-  const timeToNext = getTimeToNextPrayer()
+  const getClockAngles = () => {
+    const sec = currentTime.getSeconds()
+    const min = currentTime.getMinutes()
+    const hrs = currentTime.getHours() % 12
+    return {
+      second: sec * 6,
+      minute: min * 6 + sec * 0.1,
+      hour: hrs * 30 + min * 0.5
+    }
+  }
+  
+  const clockAngles = getClockAngles()
+  const { hours, minutes, seconds } = getFormattedClock()
+  
+  const getTimeToNext = () => {
+    if (!nextPrayer) return null
+    const now = currentTime
+    const [prayerHour, prayerMin] = nextPrayer.time.split(':').map(Number)
+    let targetTime = new Date(now)
+    targetTime.setHours(prayerHour, prayerMin, 0, 0)
+    if (nextPrayer.tomorrow) {
+      targetTime.setDate(targetTime.getDate() + 1)
+    }
+    const diffMs = targetTime - now
+    if (diffMs <= 0) return null
+    const hrsLeft = Math.floor(diffMs / (1000 * 60 * 60))
+    const minsLeft = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60))
+    const secsLeft = Math.floor((diffMs % (1000 * 60)) / 1000)
+    return { hours: hrsLeft, minutes: minsLeft, seconds: secsLeft }
+  }
+  
+  const timeToNext = getTimeToNext()
 
   return (
-    <div className="h-screen w-screen bg-gradient-to-br from-emerald-950 via-green-900 to-emerald-950 overflow-hidden">
-      {/* Decorative Background */}
-      <div className="absolute inset-0 opacity-5 pointer-events-none">
-        <div className="absolute inset-0" style={{
-          backgroundImage: `radial-gradient(circle at 2px 2px, gold 1px, transparent 1px)`,
-          backgroundSize: '40px 40px'
+    <div className="h-screen w-screen overflow-hidden bg-gradient-to-br from-emerald-950 via-emerald-900 to-emerald-800 font-sans relative">
+      {/* Islamic Pattern Background */}
+      <div className="absolute inset-0 opacity-15">
+        <div className="absolute top-0 left-0 w-full h-full" style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg width='120' height='120' viewBox='0 0 120 120' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M60 20L95 55L60 90L25 55L60 20Z' fill='none' stroke='%23FFD700' stroke-width='1.5'/%3E%3C/svg%3E")`,
+          backgroundSize: '140px 140px'
         }}></div>
       </div>
-      
-      <div className="max-w-7xl mx-auto relative z-10 h-full flex flex-col">
-        {/* Header */}
-        <div className="text-center mt-1 mb-3 flex-shrink-0">
-          <h1 className="text-3xl md:text-4xl font-bold tracking-wider">
-            <span className="bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-300 bg-clip-text text-transparent">
-              🕌 MASJID AL IHSAN BAKRIE
-            </span>
-          </h1>
-          <p className="text-lg md:text-xl font-semibold text-emerald-700 mt-2">
-            PT. CPM
-          </p>
-        </div>
-        
-        {/* Main Content - Fixed Grid with no overflow */}
-        <div className="flex-grid grid grid-cols-1 lg:grid-cols-2 gap-5 min-h-0" style={{ height: 'calc(100% - 60px)' }}>
-          
-          {/* LEFT COLUMN */}
-          <div className="flex flex-col gap-4 min-h-0">
-            {/* Analog Clock - Scaled down */}
-            <div className="bg-gradient-to-br from-emerald-900/40 to-emerald-950/40 backdrop-blur-xl rounded-2xl p-4 shadow-2xl border border-amber-400/30 flex-shrink-0">
-              <div className="relative w-full max-w-[380px] aspect-square mx-auto">
-                <div className="relative w-full h-full rounded-full bg-gradient-to-br from-emerald-800 via-emerald-900 to-emerald-950 border-[10px] border-amber-400 shadow-2xl">
-                  
-                  {/* Clock Numbers - Scaled font */}
-                  {[12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map((num) => {
-                    const rotation = num * 30
-                    return (
-                      <div
-                        key={num}
-                        className="absolute"
-                        style={{
-                          transform: `rotate(${rotation}deg)`,
-                          width: '100%',
-                          height: '100%',
-                          position: 'absolute',
-                          top: 0,
-                          left: 0
-                        }}
-                      >
-                        <span
-                          style={{
-                            display: 'block',
-                            transform: `rotate(-${rotation}deg)`,
-                            position: 'absolute',
-                            top: '12px',
-                            left: '50%',
-                            marginLeft: '-14px',
-                            fontSize: '20px',
-                            fontWeight: 'bold',
-                            color: '#fbbf24'
-                          }}
-                        >
-                          {num}
-                        </span>
-                      </div>
-                    )
-                  })}
-                  
-                  {/* Center Point */}
-                  <div className="absolute top-1/2 left-1/2 w-8 h-8 bg-gradient-to-br from-amber-400 to-yellow-500 rounded-full transform -translate-x-1/2 -translate-y-1/2 z-20 shadow-xl">
-                    <div className="absolute inset-1.5 bg-emerald-900 rounded-full"></div>
-                  </div>
-                  
-                  {/* Hour Hand */}
-                  <div
-                    className="absolute top-1/2 left-1/2 w-3 h-24 bg-gradient-to-b from-amber-400 to-yellow-600 rounded-full origin-bottom z-10"
-                    style={{
-                      transform: `translateX(-50%) translateY(-100%) rotate(${hour}deg)`,
-                      transition: 'transform 0.1s'
-                    }}
-                  ></div>
-                  
-                  {/* Minute Hand */}
-                  <div
-                    className="absolute top-1/2 left-1/2 w-2.5 h-32 bg-gradient-to-b from-amber-300 to-yellow-500 rounded-full origin-bottom z-10"
-                    style={{
-                      transform: `translateX(-50%) translateY(-100%) rotate(${minute}deg)`,
-                      transition: 'transform 0.1s'
-                    }}
-                  ></div>
-                  
-                  {/* Second Hand */}
-                  <div
-                    className="absolute top-1/2 left-1/2 w-1.5 h-40 bg-gradient-to-b from-red-500 to-red-700 rounded-full origin-bottom z-10"
-                    style={{
-                      transform: `translateX(-50%) translateY(-100%) rotate(${second}deg)`,
-                      transition: 'transform 0.05s linear'
-                    }}
-                  ></div>
-                </div>
-              </div>
+
+      {/* Ambient Light Orbs */}
+      <div className="absolute top-0 right-0 w-[700px] h-[700px] bg-amber-500/20 rounded-full blur-3xl"></div>
+      <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-emerald-600/20 rounded-full blur-3xl"></div>
+      <div className="absolute top-1/2 left-1/2 w-[500px] h-[500px] bg-amber-400/15 rounded-full blur-3xl transform -translate-x-1/2 -translate-y-1/2"></div>
+
+      {/* Header */}
+      <header className="relative h-[12vh] px-6 lg:px-10 pt-3 z-10">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 lg:w-16 lg:h-16 bg-gradient-to-br from-amber-500 to-amber-700 rounded-2xl shadow-2xl flex items-center justify-center border-2 border-amber-300">
+              <span className="text-3xl lg:text-4xl text-white">🕌</span>
             </div>
-            
-            {/* Digital Clock - Compact */}
-            <div className="bg-gradient-to-br from-emerald-900/40 to-emerald-950/40 backdrop-blur-xl rounded-2xl p-4 shadow-2xl border border-amber-400/30 flex-shrink-0">
-              <div className="flex items-center justify-center gap-2">
-                <div className="bg-gradient-to-br from-emerald-800 to-emerald-900 rounded-xl px-4 py-2 min-w-[85px] text-center border border-amber-400/50">
-                  <span className="text-4xl md:text-5xl font-black text-transparent bg-gradient-to-b from-amber-300 to-yellow-400 bg-clip-text">
-                    {hours}
-                  </span>
-                </div>
-                <span className="text-4xl md:text-5xl font-black text-amber-400">:</span>
-                <div className="bg-gradient-to-br from-emerald-800 to-emerald-900 rounded-xl px-4 py-2 min-w-[85px] text-center border border-amber-400/50">
-                  <span className="text-4xl md:text-5xl font-black text-transparent bg-gradient-to-b from-amber-300 to-yellow-400 bg-clip-text">
-                    {minutes}
-                  </span>
-                </div>
-                <span className="text-4xl md:text-5xl font-black text-amber-400">:</span>
-                <div className="bg-gradient-to-br from-emerald-800 to-emerald-900 rounded-xl px-4 py-2 min-w-[85px] text-center border border-amber-400/50">
-                  <span className="text-4xl md:text-5xl font-black text-transparent bg-gradient-to-b from-amber-300 to-yellow-400 bg-clip-text">
-                    {seconds}
-                  </span>
-                </div>
-              </div>
-              <div className="text-center mt-2">
-                <span className="text-amber-200 text-sm">
-                  {currentTime.toLocaleDateString('id-ID', {
-                    weekday: 'long',
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                  })}
-                </span>
-              </div>
+            <div>
+              <h1 className="text-base sm:text-lg lg:text-xl xl:text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-200 to-amber-400">
+                MASJID AL IHSAN BAKRIE PT.CPM
+              </h1>
+              <p className="text-xs sm:text-sm text-emerald-300 tracking-wider mt-0.5">BERKAH • ISTIQOMAH • BERDAYA</p>
             </div>
           </div>
-          
-          {/* RIGHT COLUMN - Prayer Times */}
-          <div className="bg-gradient-to-br from-emerald-900/40 to-emerald-950/40 backdrop-blur-xl rounded-2xl shadow-2xl border border-amber-400/30 flex flex-col min-h-0">
-            {/* Header */}
-            <div className="p-3 text-center border-b border-amber-400/30 flex-shrink-0">
-              <h2 className="text-2xl md:text-3xl font-bold">
-                <span className="bg-gradient-to-r from-amber-300 to-yellow-400 bg-clip-text text-transparent">
-                  ⏰ WAKTU SHOLAT
-                </span>
-              </h2>
-              {location && (
-                <p className="text-amber-200 text-xs mt-1">
-                  📍 {location}
-                </p>
-              )}
-              {loading && (
-                <p className="text-amber-400 text-xs animate-pulse mt-1">Memuat jadwal...</p>
-              )}
+          <div className="bg-gradient-to-br from-emerald-900/90 to-emerald-950/90 backdrop-blur-2xl rounded-2xl px-5 py-2 shadow-2xl border border-amber-500/50">
+            <div className="text-xs sm:text-sm text-emerald-200">
+              {getDateString()}
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="h-[80vh] px-4 lg:px-8 flex gap-5 z-10 relative">
+        
+        {/* Left Column - Clock */}
+        <div className="w-[38%] flex flex-col h-full">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-1 h-5 bg-amber-500 rounded-full"></div>
+            <h2 className="text-xs sm:text-sm font-medium tracking-[0.2em] text-amber-400 uppercase">WAKTU SEKARANG</h2>
+            <div className="flex-1 h-px bg-gradient-to-r from-amber-500 to-transparent"></div>
+          </div>
+
+          <div className="flex-1 bg-gradient-to-br from-emerald-900/80 to-emerald-950/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-amber-500/50 p-4 flex flex-col items-center justify-center">
+            {/* Analog Clock - Larger to fill card */}
+            <div className="relative w-full max-w-[450px] mx-auto aspect-square mb-4">
+              <div className="relative w-full h-full rounded-full bg-gradient-to-br from-emerald-800 to-emerald-950 border-[14px] border-amber-500/60 shadow-2xl">
+                {/* Clock numbers - bigger */}
+                {[12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map(num => {
+                  const angle = num * 30
+                  return (
+                    <div key={num} className="absolute w-full h-full" style={{ transform: `rotate(${angle}deg)` }}>
+                      <span className="absolute top-4 left-1/2 -translate-x-1/2 text-amber-400 font-bold text-xl sm:text-2xl" style={{ transform: `rotate(-${angle}deg)` }}>
+                        {num}
+                      </span>
+                    </div>
+                  )
+                })}
+                {/* Center point - bigger */}
+                <div className="absolute top-1/2 left-1/2 w-6 h-6 bg-amber-400 rounded-full -translate-x-1/2 -translate-y-1/2 z-20 shadow-lg"></div>
+                {/* Hour hand - thicker */}
+                <div className="absolute bottom-1/2 left-1/2 w-3 h-[28%] bg-gradient-to-t from-amber-400 to-amber-200 rounded-full origin-bottom -translate-x-1/2 transition-transform duration-100" style={{ transform: `translateX(-50%) rotate(${clockAngles.hour}deg)` }}></div>
+                {/* Minute hand - thicker */}
+                <div className="absolute bottom-1/2 left-1/2 w-2 h-[38%] bg-amber-300 rounded-full origin-bottom -translate-x-1/2 transition-transform duration-100" style={{ transform: `translateX(-50%) rotate(${clockAngles.minute}deg)` }}></div>
+                {/* Second hand */}
+                <div className="absolute bottom-1/2 left-1/2 w-1 h-[44%] bg-red-400 rounded-full origin-bottom -translate-x-1/2 transition-transform duration-100" style={{ transform: `translateX(-50%) rotate(${clockAngles.second}deg)` }}></div>
+              </div>
             </div>
             
-            {/* Next Prayer Counter - Compact */}
+            {/* Digital Time - bigger */}
+            <div className="flex justify-center items-center gap-4 bg-emerald-950/50 rounded-xl p-4 border border-amber-500/30 w-full">
+              <div className="text-5xl sm:text-6xl font-mono font-bold text-amber-300">{hours}</div>
+              <span className="text-4xl sm:text-5xl text-amber-500">:</span>
+              <div className="text-5xl sm:text-6xl font-mono font-bold text-amber-300">{minutes}</div>
+              <span className="text-4xl sm:text-5xl text-amber-500">:</span>
+              <div className="text-5xl sm:text-6xl font-mono font-bold text-amber-300">{seconds}</div>
+            </div>
+          </div>
+        </div>
+        
+        {/* Right Column - Prayer Times */}
+        <div className="w-[62%] flex flex-col h-full">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-1 h-5 bg-amber-500 rounded-full"></div>
+            <h2 className="text-xs sm:text-sm font-medium tracking-[0.2em] text-amber-400 uppercase">JADWAL SHOLAT HARIAN</h2>
+            <div className="flex-1 h-px bg-gradient-to-r from-amber-500 to-transparent"></div>
+          </div>
+          
+          <div className="flex-1 bg-gradient-to-br from-emerald-900/80 to-emerald-950/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-amber-500/50 flex flex-col overflow-hidden">
+            
+            {/* Next Prayer Counter */}
             {nextPrayer && timeToNext && (
-              <div className="mx-3 mt-2 p-2 bg-gradient-to-r from-amber-500/20 to-yellow-500/20 rounded-xl border border-amber-400/50 text-center flex-shrink-0">
-                <p className="text-amber-300 text-xs">Menuju {nextPrayer.name} {nextPrayer.tomorrow && '(Besok)'}</p>
-                <p className="text-xl font-mono font-bold text-amber-400">
+              <div className="mx-4 mt-4 p-3 bg-gradient-to-r from-amber-500/20 to-amber-600/20 rounded-xl border border-amber-500/60 text-center flex-shrink-0">
+                <p className="text-amber-300 text-sm uppercase tracking-wider font-medium">
+                  ⟡ MENUJU {nextPrayer.name} {nextPrayer.tomorrow ? '(BESOK)' : ''} ⟡
+                </p>
+                <p className="text-2xl font-mono font-bold text-amber-400 tracking-widest mt-1">
                   {String(timeToNext.hours).padStart(2, '0')}:{String(timeToNext.minutes).padStart(2, '0')}:{String(timeToNext.seconds).padStart(2, '0')}
                 </p>
               </div>
             )}
             
-            {/* Prayer List - Scroll if needed but compact */}
-            <div className="flex-grow overflow-y-auto p-3 space-y-2 min-h-0" style={{ scrollbarWidth: 'thin' }}>
-              {prayerTimes.map((prayer, index) => {
-                const isNext = nextPrayer && nextPrayer.name === prayer.name && !nextPrayer.tomorrow
-                return (
-                  <div
-                    key={index}
-                    className={`rounded-xl transition-all duration-200 ${
-                      isNext 
-                        ? 'bg-gradient-to-r from-amber-500/30 to-yellow-500/30 border border-amber-400' 
-                        : 'bg-emerald-800/30 border border-amber-400/20'
-                    }`}
-                  >
-                    <div className="flex justify-between items-center p-3">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xl">{prayer.icon}</span>
-                        <span className={`text-base md:text-lg font-bold ${isNext ? 'text-amber-400' : 'text-amber-300'}`}>
-                          {prayer.name}
-                        </span>
-                        {isNext && (
-                          <span className="px-1.5 py-0.5 bg-amber-500 text-emerald-900 text-[10px] font-bold rounded-full">
-                            NEXT
-                          </span>
-                        )}
-                      </div>
-                      <span className={`text-xl md:text-2xl font-bold ${
-                        isNext ? 'text-amber-400' : 'text-amber-300'
-                      }`}>
-                        {prayer.time}
-                      </span>
-                    </div>
-                  </div>
-                )
-              })}
-              
-              {error && (
-                <div className="text-center text-red-400 text-sm py-4">
-                  ⚠️ {error}
+            {/* Prayer List - All visible with flex */}
+            <div className="flex-1 px-4 py-4 flex flex-col justify-between">
+              {loading ? (
+                <div className="flex justify-center items-center h-full">
+                  <div className="text-amber-400 animate-pulse text-lg">Memuat jadwal sholat...</div>
                 </div>
+              ) : error ? (
+                <div className="text-center text-amber-500/70 text-base">{error}</div>
+              ) : (
+                prayerTimes.map((prayer, idx) => {
+                  const isNext = nextPrayer && nextPrayer.name === prayer.name && !nextPrayer.tomorrow
+                  return (
+                    <div 
+                      key={idx} 
+                      className={`rounded-xl transition-all duration-300 ${
+                        isNext 
+                          ? 'bg-gradient-to-r from-amber-600/30 to-amber-500/20 border-l-4 border-amber-500' 
+                          : 'bg-emerald-800/30 border border-amber-500/30'
+                      }`}
+                    >
+                      <div className="flex justify-between items-center py-3 px-4">
+                        <div className="flex items-center gap-4">
+                          <span className="text-3xl">{prayer.icon}</span>
+                          <div>
+                            <p className={`text-xl font-bold ${isNext ? 'text-amber-400' : 'text-amber-300'}`}>
+                              {prayer.name}
+                            </p>
+                            <p className="text-sm text-emerald-300/70 mt-0.5" style={{ fontFamily: "'Amiri', serif" }}>
+                              {prayer.arabic}
+                            </p>
+                          </div>
+                          {isNext && (
+                            <span className="ml-2 px-2 py-1 bg-amber-500 text-emerald-900 text-xs font-bold rounded-full shadow-md">
+                              NEXT
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-right">
+                          <span className={`text-2xl font-mono font-bold ${isNext ? 'text-amber-400' : 'text-amber-300'}`}>
+                            {prayer.time}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })
               )}
             </div>
             
-            {/* Footer - Compact */}
-            <div className="p-2 text-center border-t border-amber-400/30 flex-shrink-0">
-              <p className="text-amber-400/60 text-[10px]">
-                وَالَّذِينَ هُمْ عَلَىٰ صَلَاتِهِمْ يُحَافِظُونَ
+            {/* Footer */}
+            <div className="p-3 border-t border-amber-500/30 text-center bg-emerald-950/40 flex-shrink-0">
+              <p className="text-amber-400/70 text-sm" style={{ fontFamily: "'Amiri', serif" }}>
+                حَافِظُوا عَلَى الصَّلَوَاتِ وَالصَّلَاةِ الْوُسْطَىٰ
               </p>
+              <p className="text-emerald-300/60 text-xs mt-1">Peliharalah segala sholat dan sholat wustha (Ashar)</p>
             </div>
           </div>
         </div>
-      </div>
-      
-      <style jsx>{`
-        .overflow-y-auto::-webkit-scrollbar {
-          width: 4px;
-        }
-        .overflow-y-auto::-webkit-scrollbar-track {
-          background: rgba(251, 191, 36, 0.1);
-          border-radius: 10px;
-        }
-        .overflow-y-auto::-webkit-scrollbar-thumb {
-          background: rgba(251, 191, 36, 0.5);
-          border-radius: 10px;
-        }
-      `}</style>
+      </main>
+
+      {/* Footer */}
+      <footer className="relative bg-gradient-to-r from-emerald-950 to-emerald-900 border-t border-amber-500/50 py-3 mt-5 z-10">
+        <div className="px-6 flex items-center justify-between text-xs">
+          <p className="text-amber-300">© 2026 Masjid Al Ihsan Bakrie PT.CPM</p>
+          <p className="text-amber-400 font-bold">Jadwal Sholat Digital</p>
+        </div>
+      </footer>
     </div>
   )
 }

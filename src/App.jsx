@@ -8,12 +8,24 @@ function App() {
   const [error, setError] = useState(null)
   const [nextPrayer, setNextPrayer] = useState(null)
 
-  // Real-time clock update
+  // Real-time clock update - optimized for smooth updates
   useEffect(() => {
-    const clockInterval = setInterval(() => {
+    const updateClock = () => {
       setCurrentTime(new Date())
-    }, 1000)
-    return () => clearInterval(clockInterval)
+    }
+    
+    // Initial update
+    updateClock()
+    
+    // Update every second with setTimeout for better timing accuracy
+    const tick = () => {
+      updateClock()
+      setTimeout(tick, 1000 - (Date.now() % 1000))
+    }
+    
+    tick()
+    
+    return () => {}
   }, [])
 
   // Fetch prayer times from API
@@ -33,12 +45,12 @@ function App() {
           setLocation(`${data.data.lokasi}, ${data.data.daerah}`)
           
           const prayerList = [
-            { name: 'Imsak', time: jadwal.imsak, icon: '🌙', arabic: 'إِمْسَاك' },
-            { name: 'Subuh', time: jadwal.subuh, icon: '⭐', arabic: 'صَلَاةُ الْفَجْرِ' },
-            { name: 'Dzuhur', time: jadwal.dzuhur, icon: '☀️', arabic: 'صَلَاةُ الظُّهْرِ' },
-            { name: 'Ashar', time: jadwal.ashar, icon: '🌅', arabic: 'صَلَاةُ الْعَصْرِ' },
-            { name: 'Maghrib', time: jadwal.maghrib, icon: '🌆', arabic: 'صَلَاةُ الْمَغْرِبِ' },
-            { name: 'Isya', time: jadwal.isya, icon: '🌙', arabic: 'صَلَاةُ الْعِشَاءِ' }
+            { name: 'Imsak', time: jadwal.imsak, icon: '🌙' },
+            { name: 'Subuh', time: jadwal.subuh, icon: '⭐' },
+            { name: 'Dzuhur', time: jadwal.dzuhur, icon: '☀️' },
+            { name: 'Ashar', time: jadwal.ashar, icon: '🌅' },
+            { name: 'Maghrib', time: jadwal.maghrib, icon: '🌆' },
+            { name: 'Isya', time: jadwal.isya, icon: '🌙' }
           ]
           setPrayerTimes(prayerList)
           setError(null)
@@ -160,7 +172,7 @@ function App() {
               <span className="text-xl lg:text-2xl text-white">🕌</span>
             </div>
             <div>
-              <h1 className="text-xs sm:text-sm lg:text-base xl:text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-200 to-amber-400">
+              <h1 className="text-xs sm:text-sm lg:text-base xl:text-lg font-bold text-amber-400">
                 MASJID AL IHSAN BAKRIE PT.CPM
               </h1>
               <p className="text-[8px] sm:text-[10px] text-emerald-300 tracking-wider">BERKAH • ISTIQOMAH • BERDAYA</p>
@@ -182,7 +194,7 @@ function App() {
           <div className="flex items-center gap-2 mb-2">
             <div className="w-1 h-4 bg-amber-500 rounded-full"></div>
             <h2 className="text-[9px] sm:text-[10px] font-medium tracking-[0.2em] text-amber-400 uppercase">WAKTU SEKARANG</h2>
-            <div className="flex-1 h-px bg-gradient-to-r from-amber-500 to-transparent"></div>
+            <div className="flex-1 h-px bg-amber-500/50"></div>
           </div>
 
           <div className="flex-1 bg-gradient-to-br from-emerald-900/80 to-emerald-950/80 backdrop-blur-xl rounded-2xl shadow-2xl border border-amber-500/50 p-3 flex flex-col items-center justify-center">
@@ -227,7 +239,7 @@ function App() {
           <div className="flex items-center gap-2 mb-2">
             <div className="w-1 h-4 bg-amber-500 rounded-full"></div>
             <h2 className="text-[9px] sm:text-[10px] font-medium tracking-[0.2em] text-amber-400 uppercase">JADWAL SHOLAT HARIAN</h2>
-            <div className="flex-1 h-px bg-gradient-to-r from-amber-500 to-transparent"></div>
+            <div className="flex-1 h-px bg-amber-500/50"></div>
           </div>
           
           <div className="flex-1 bg-gradient-to-br from-emerald-900/80 to-emerald-950/80 backdrop-blur-xl rounded-2xl shadow-2xl border border-amber-500/50 flex flex-col overflow-hidden">
@@ -264,15 +276,12 @@ function App() {
                           : 'bg-emerald-800/30 border border-amber-500/30'
                       }`}
                     >
-                      <div className="flex justify-between items-center py-2 px-3">
+                      <div className="flex justify-between items-center py-3 px-3">
                         <div className="flex items-center gap-2">
-                          <span className="text-xl">{prayer.icon}</span>
+                          <span className="text-2xl">{prayer.icon}</span>
                           <div>
-                            <p className={`text-sm font-bold ${isNext ? 'text-amber-400' : 'text-amber-300'}`}>
+                            <p className={`text-lg font-bold ${isNext ? 'text-amber-400' : 'text-amber-300'}`}>
                               {prayer.name}
-                            </p>
-                            <p className="text-[10px] text-emerald-300/70" style={{ fontFamily: "'Amiri', serif" }}>
-                              {prayer.arabic}
                             </p>
                           </div>
                           {isNext && (
@@ -282,7 +291,7 @@ function App() {
                           )}
                         </div>
                         <div className="text-right">
-                          <span className={`text-sm font-mono font-bold ${isNext ? 'text-amber-400' : 'text-amber-300'}`}>
+                          <span className={`text-lg font-mono font-bold ${isNext ? 'text-amber-400' : 'text-amber-300'}`}>
                             {prayer.time}
                           </span>
                         </div>

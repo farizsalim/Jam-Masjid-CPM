@@ -1,41 +1,69 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 
 function App() {
-  const [currentTime, setCurrentTime] = useState(new Date())
+  const GMT8_MS = 8 * 3600000
+  const [currentTime, setCurrentTime] = useState(new Date(Date.now() + GMT8_MS))
+  const [timeOffset, setTimeOffset] = useState(GMT8_MS)
+  const timeOffsetRef = useRef(GMT8_MS)
   const [prayerTimes, setPrayerTimes] = useState([])
+  const [currentDate, setCurrentDate] = useState(() => {
+    const d = new Date(Date.now() + GMT8_MS)
+    return `${d.getUTCFullYear()}-${d.getUTCMonth()}-${d.getUTCDate()}`
+  })
   const [location, setLocation] = useState('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [nextPrayer, setNextPrayer] = useState(null)
 
-  // Real-time clock update - optimized for smooth updates
+  // Sync ref whenever timeOffset state changes
   useEffect(() => {
-    const updateClock = () => {
-      setCurrentTime(new Date())
-    }
-    
-    // Initial update
-    updateClock()
-    
-    // Update every second with setTimeout for better timing accuracy
+    timeOffsetRef.current = timeOffset
+  }, [timeOffset])
+
+  // Real-time clock update - uses internet-synced GMT+8 offset
+  useEffect(() => {
+    let timeoutId
     const tick = () => {
-      updateClock()
-      setTimeout(tick, 1000 - (Date.now() % 1000))
+      setCurrentTime(new Date(Date.now() + timeOffsetRef.current))
+      timeoutId = setTimeout(tick, 1000 - (Date.now() % 1000))
     }
-    
     tick()
-    
-    return () => {}
+    return () => clearTimeout(timeoutId)
   }, [])
+
+  // Fetch accurate time from internet (GMT+8) and re-sync every 30 minutes
+  useEffect(() => {
+    const syncTime = async () => {
+      try {
+        const res = await fetch('https://worldtimeapi.org/api/timezone/Asia/Kuala_Lumpur')
+        const data = await res.json()
+        const serverUtcMs = data.unixtime * 1000
+        const offset = serverUtcMs - Date.now() + GMT8_MS
+        timeOffsetRef.current = offset
+        setTimeOffset(offset)
+      } catch {
+        // Jika gagal, tetap pakai GMT+8 dari jam lokal (offset awal sudah GMT+8)
+      }
+    }
+    syncTime()
+    const intervalId = setInterval(syncTime, 30 * 60 * 1000)
+    return () => clearInterval(intervalId)
+  }, [])
+
+  // Detect date change (GMT+8) and update currentDate to trigger prayer re-fetch
+  useEffect(() => {
+    const dateStr = `${currentTime.getUTCFullYear()}-${currentTime.getUTCMonth()}-${currentTime.getUTCDate()}`
+    setCurrentDate(prev => prev !== dateStr ? dateStr : prev)
+  }, [currentTime])
 
   // Fetch prayer times from API
   useEffect(() => {
     const fetchPrayerSchedule = async () => {
       try {
-        const now = new Date()
-        const year = now.getFullYear()
-        const month = String(now.getMonth() + 1).padStart(2, '0')
-        const day = String(now.getDate()).padStart(2, '0')
+        const gmt8Date = new Date(Date.now() + 8 * 3600000)
+        const year = gmt8Date.getUTCFullYear()
+        const month = String(gmt8Date.getUTCMonth() + 1).padStart(2, '0')
+        const day = String(gmt8Date.getUTCDate()).padStart(2, '0')
         
         const response = await fetch(`https://api.myquran.com/v2/sholat/jadwal/2813/${year}/${month}/${day}`)
         const data = await response.json()
@@ -76,14 +104,14 @@ function App() {
     }
     
     fetchPrayerSchedule()
-  }, [])
+  }, [currentDate])
 
   // Determine next prayer
   useEffect(() => {
     if (prayerTimes.length > 0) {
       const now = currentTime
-      const currentHour = now.getHours()
-      const currentMinute = now.getMinutes()
+      const currentHour = now.getUTCHours()
+      const currentMinute = now.getUTCMinutes()
       const currentTimeStr = `${String(currentHour).padStart(2, '0')}:${String(currentMinute).padStart(2, '0')}`
       
       let upcoming = null
@@ -101,25 +129,22 @@ function App() {
   }, [prayerTimes, currentTime])
 
   const getFormattedClock = () => {
-    const hours = String(currentTime.getHours()).padStart(2, '0')
-    const minutes = String(currentTime.getMinutes()).padStart(2, '0')
-    const seconds = String(currentTime.getSeconds()).padStart(2, '0')
+    const hours = String(currentTime.getUTCHours()).padStart(2, '0')
+    const minutes = String(currentTime.getUTCMinutes()).padStart(2, '0')
+    const seconds = String(currentTime.getUTCSeconds()).padStart(2, '0')
     return { hours, minutes, seconds }
   }
   
   const getDateString = () => {
-    return currentTime.toLocaleDateString('id-ID', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    })
+    const days = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu']
+    const months = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember']
+    return `${days[currentTime.getUTCDay()]}, ${currentTime.getUTCDate()} ${months[currentTime.getUTCMonth()]} ${currentTime.getUTCFullYear()}`
   }
   
   const getClockAngles = () => {
-    const sec = currentTime.getSeconds()
-    const min = currentTime.getMinutes()
-    const hrs = currentTime.getHours() % 12
+    const sec = currentTime.getUTCSeconds()
+    const min = currentTime.getUTCMinutes()
+    const hrs = currentTime.getUTCHours() % 12
     return {
       second: sec * 6,
       minute: min * 6 + sec * 0.1,
@@ -134,12 +159,12 @@ function App() {
     if (!nextPrayer) return null
     const now = currentTime
     const [prayerHour, prayerMin] = nextPrayer.time.split(':').map(Number)
-    let targetTime = new Date(now)
-    targetTime.setHours(prayerHour, prayerMin, 0, 0)
+    const midnightMs = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())
+    let targetMs = midnightMs + prayerHour * 3600000 + prayerMin * 60000
     if (nextPrayer.tomorrow) {
-      targetTime.setDate(targetTime.getDate() + 1)
+      targetMs += 24 * 3600000
     }
-    const diffMs = targetTime - now
+    const diffMs = targetMs - now.getTime()
     if (diffMs <= 0) return null
     const hrsLeft = Math.floor(diffMs / (1000 * 60 * 60))
     const minsLeft = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60))
@@ -168,7 +193,7 @@ function App() {
       <header className="relative h-[11vh] px-4 lg:px-8 pt-2 z-10">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3 lg:gap-4">
-            <div className="w-10 h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-amber-500 to-amber-700 rounded-xl shadow-2xl flex items-center justify-center border border-amber-300">
+            <div className="w-10 h-10 lg:w-12 lg:h-12 bg-amber-500 rounded-xl shadow-2xl flex items-center justify-center border border-amber-300">
               <span className="text-xl lg:text-2xl text-white">🕌</span>
             </div>
             <div>
@@ -200,7 +225,7 @@ function App() {
           <div className="flex-1 bg-gradient-to-br from-emerald-900/80 to-emerald-950/80 backdrop-blur-xl rounded-2xl shadow-2xl border border-amber-500/50 p-3 flex flex-col items-center justify-center">
             {/* Analog Clock - Balanced size */}
             <div className="relative w-full max-w-[320px] mx-auto aspect-square mb-3">
-              <div className="relative w-full h-full rounded-full bg-gradient-to-br from-emerald-800 to-emerald-950 border-[10px] border-amber-500/60 shadow-2xl">
+              <div className="relative w-full h-full rounded-full bg-gradient-to-br from-emerald-800 to-emerald-950 border-[10px] border-amber-400 shadow-2xl">
                 {/* Clock numbers */}
                 {[12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map(num => {
                   const angle = num * 30
@@ -215,7 +240,7 @@ function App() {
                 {/* Center point */}
                 <div className="absolute top-1/2 left-1/2 w-4 h-4 bg-amber-400 rounded-full -translate-x-1/2 -translate-y-1/2 z-20 shadow-lg"></div>
                 {/* Hour hand */}
-                <div className="absolute bottom-1/2 left-1/2 w-2 h-[28%] bg-gradient-to-t from-amber-400 to-amber-200 rounded-full origin-bottom -translate-x-1/2 transition-transform duration-100" style={{ transform: `translateX(-50%) rotate(${clockAngles.hour}deg)` }}></div>
+                <div className="absolute bottom-1/2 left-1/2 w-2 h-[28%] bg-amber-400 rounded-full origin-bottom -translate-x-1/2 transition-transform duration-100" style={{ transform: `translateX(-50%) rotate(${clockAngles.hour}deg)` }}></div>
                 {/* Minute hand */}
                 <div className="absolute bottom-1/2 left-1/2 w-1.5 h-[38%] bg-amber-300 rounded-full origin-bottom -translate-x-1/2 transition-transform duration-100" style={{ transform: `translateX(-50%) rotate(${clockAngles.minute}deg)` }}></div>
                 {/* Second hand */}
@@ -246,7 +271,7 @@ function App() {
             
             {/* Next Prayer Counter */}
             {nextPrayer && timeToNext && (
-              <div className="mx-3 mt-3 p-2 bg-gradient-to-r from-amber-500/20 to-amber-600/20 rounded-lg border border-amber-500/60 text-center flex-shrink-0">
+              <div className="mx-3 mt-3 p-2 bg-amber-500/20 rounded-lg border border-amber-500/60 text-center flex-shrink-0">
                 <p className="text-amber-300 text-[10px] uppercase tracking-wider font-medium">
                   ⟡ MENUJU {nextPrayer.name} {nextPrayer.tomorrow ? '(BESOK)' : ''} ⟡
                 </p>
@@ -272,7 +297,7 @@ function App() {
                       key={idx} 
                       className={`rounded-lg transition-all duration-300 ${
                         isNext 
-                          ? 'bg-gradient-to-r from-amber-600/30 to-amber-500/20 border-l-4 border-amber-500' 
+                          ? 'bg-amber-500/25 border-l-4 border-amber-500' 
                           : 'bg-emerald-800/30 border border-amber-500/30'
                       }`}
                     >

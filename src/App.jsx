@@ -73,7 +73,6 @@ function App() {
           setLocation(`${data.data.lokasi}, ${data.data.daerah}`)
           
           const prayerList = [
-            { name: 'Imsak', time: jadwal.imsak, icon: '🌙' },
             { name: 'Subuh', time: jadwal.subuh, icon: '⭐' },
             { name: 'Dzuhur', time: jadwal.dzuhur, icon: '☀️' },
             { name: 'Ashar', time: jadwal.ashar, icon: '🌅' },
@@ -89,7 +88,6 @@ function App() {
         console.error(err)
         setError('Koneksi gagal, menggunakan data offline')
         const fallbackPrayers = [
-          { name: 'Imsak', time: '04:30', icon: '🌙', arabic: 'إِمْسَاك' },
           { name: 'Subuh', time: '04:45', icon: '⭐', arabic: 'صَلَاةُ الْفَجْرِ' },
           { name: 'Dzuhur', time: '12:00', icon: '☀️', arabic: 'صَلَاةُ الظُّهْرِ' },
           { name: 'Ashar', time: '15:15', icon: '🌅', arabic: 'صَلَاةُ الْعَصْرِ' },
@@ -175,174 +173,245 @@ function App() {
   const timeToNext = getTimeToNext()
 
   return (
-    <div className="h-screen w-screen overflow-hidden bg-gradient-to-br from-emerald-950 via-emerald-900 to-emerald-800 font-sans relative">
-      {/* Islamic Pattern Background */}
-      <div className="absolute inset-0 opacity-15">
-        <div className="absolute top-0 left-0 w-full h-full" style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='120' height='120' viewBox='0 0 120 120' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M60 20L95 55L60 90L25 55L60 20Z' fill='none' stroke='%23FFD700' stroke-width='1.5'/%3E%3C/svg%3E")`,
-          backgroundSize: '140px 140px'
+    <div className="h-screen w-screen overflow-hidden font-sans relative" style={{ background: '#060f08' }}>
+
+      {/* Islamic Geometric Background Pattern */}
+      <div className="absolute inset-0" style={{ opacity: 0.055 }}>
+        <div className="absolute inset-0" style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%23FFD700' stroke-width='0.8'%3E%3Crect x='10' y='10' width='80' height='80' transform='rotate(45 50 50)'/%3E%3Crect x='22' y='22' width='56' height='56' transform='rotate(45 50 50)'/%3E%3Ccircle cx='50' cy='50' r='28'/%3E%3Ccircle cx='50' cy='50' r='8'/%3E%3Cline x1='50' y1='0' x2='50' y2='22'/%3E%3Cline x1='50' y1='78' x2='50' y2='100'/%3E%3Cline x1='0' y1='50' x2='22' y2='50'/%3E%3Cline x1='78' y1='50' x2='100' y2='50'/%3E%3C/g%3E%3C/svg%3E")`,
+          backgroundSize: '100px 100px'
         }}></div>
       </div>
 
-      {/* Ambient Light Orbs */}
-      <div className="absolute top-0 right-0 w-[700px] h-[700px] bg-amber-500/20 rounded-full blur-3xl"></div>
-      <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-emerald-600/20 rounded-full blur-3xl"></div>
-      <div className="absolute top-1/2 left-1/2 w-[500px] h-[500px] bg-amber-400/15 rounded-full blur-3xl transform -translate-x-1/2 -translate-y-1/2"></div>
+      {/* Ambient corner glows */}
+      <div className="absolute -top-32 -right-32 w-[500px] h-[500px] rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(245,158,11,0.12), transparent 70%)' }}></div>
+      <div className="absolute -bottom-32 -left-32 w-[500px] h-[500px] rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(6,78,59,0.25), transparent 70%)' }}></div>
 
-      {/* Header */}
-      <header className="relative h-[11vh] px-4 lg:px-8 pt-2 z-10">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3 lg:gap-4">
-            <div className="w-10 h-10 lg:w-12 lg:h-12 bg-amber-500 rounded-xl shadow-2xl flex items-center justify-center border border-amber-300">
-              <span className="text-xl lg:text-2xl text-white">🕌</span>
+      {/* ── HEADER ── */}
+      <header className="relative h-[12vh] flex items-center px-6 lg:px-10 z-10" style={{ borderBottom: '1px solid rgba(251,191,36,0.25)' }}>
+        <div className="flex items-center justify-between w-full">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-full bg-amber-500 flex items-center justify-center flex-shrink-0" style={{ boxShadow: '0 0 22px rgba(251,191,36,0.45)' }}>
+              <span className="text-2xl">🕌</span>
             </div>
             <div>
-              <h1 className="text-xs sm:text-sm lg:text-base xl:text-lg font-bold text-amber-400">
+              <h1 className="text-sm lg:text-base xl:text-lg font-black text-amber-200 tracking-wide leading-tight">
                 MASJID AL IHSAN BAKRIE PT.CPM
               </h1>
-              <p className="text-[8px] sm:text-[10px] text-emerald-300 tracking-wider">BERKAH • ISTIQOMAH • BERDAYA</p>
+              <p className="text-[9px] lg:text-[10px] text-emerald-400 tracking-[0.35em] mt-0.5">BERKAH • ISTIQOMAH • BERDAYA</p>
             </div>
           </div>
-          <div className="bg-gradient-to-br from-emerald-900/90 to-emerald-950/90 backdrop-blur-2xl rounded-xl px-3 py-1 shadow-2xl border border-amber-500/50">
-            <div className="text-[8px] sm:text-[10px] text-emerald-200">
-              {getDateString()}
-            </div>
+          <div className="text-right">
+            <p className="text-sm lg:text-base font-semibold text-amber-200">{getDateString()}</p>
+            <p className="text-xs text-amber-400/60 mt-0.5" style={{ fontFamily: "'Amiri', serif" }}>بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ</p>
           </div>
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="h-[82vh] px-3 lg:px-6 flex gap-4 z-10 relative">
-        
-        {/* Left Column - Clock */}
-        <div className="w-[38%] flex flex-col h-full">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-1 h-4 bg-amber-500 rounded-full"></div>
-            <h2 className="text-[9px] sm:text-[10px] font-medium tracking-[0.2em] text-amber-400 uppercase">WAKTU SEKARANG</h2>
-            <div className="flex-1 h-px bg-amber-500/50"></div>
+      {/* ── MAIN ── */}
+      <main className="h-[80vh] px-4 lg:px-8 py-3 flex gap-5 z-10 relative">
+
+        {/* LEFT: Clock */}
+        <div className="w-[38%] flex flex-col gap-3 h-full">
+
+          <div className="flex items-center gap-2">
+            <div className="w-1 h-4 rounded-full bg-amber-400"></div>
+            <span className="text-[9px] font-semibold tracking-[0.28em] text-amber-400 uppercase">Waktu Sekarang</span>
+            <div className="flex-1 h-px" style={{ background: 'rgba(251,191,36,0.25)' }}></div>
           </div>
 
-          <div className="flex-1 bg-gradient-to-br from-emerald-900/80 to-emerald-950/80 backdrop-blur-xl rounded-2xl shadow-2xl border border-amber-500/50 p-3 flex flex-col items-center justify-center">
-            {/* Analog Clock - Balanced size */}
-            <div className="relative w-full max-w-[320px] mx-auto aspect-square mb-3">
-              <div className="relative w-full h-full rounded-full bg-gradient-to-br from-emerald-800 to-emerald-950 border-[10px] border-amber-400 shadow-2xl">
-                {/* Clock numbers */}
-                {[12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map(num => {
-                  const angle = num * 30
+          {/* Analog Clock Card */}
+          <div className="flex-1 rounded-2xl flex items-center justify-center p-4" style={{ background: 'rgba(3,16,8,0.8)', border: '1px solid rgba(52,211,153,0.18)' }}>
+            <div className="relative w-full max-w-[290px] aspect-square">
+              <div className="relative w-full h-full rounded-full" style={{
+                background: '#030d05',
+                border: '8px solid #fbbf24',
+                boxShadow: '0 0 30px rgba(251,191,36,0.3), 0 0 60px rgba(251,191,36,0.1), inset 0 0 50px rgba(0,0,0,0.6)'
+              }}>
+
+                {/* Hour tick marks */}
+                {[...Array(12)].map((_, i) => (
+                  <div key={`h${i}`} className="absolute w-full h-full" style={{ transform: `rotate(${i * 30}deg)` }}>
+                    <div className="absolute left-1/2 -translate-x-1/2 rounded-full" style={{ top: '9px', width: '3px', height: '14px', background: '#fbbf24' }}></div>
+                  </div>
+                ))}
+
+                {/* Minute tick marks */}
+                {[...Array(60)].map((_, i) => {
+                  if (i % 5 === 0) return null
                   return (
-                    <div key={num} className="absolute w-full h-full" style={{ transform: `rotate(${angle}deg)` }}>
-                      <span className="absolute top-2 left-1/2 -translate-x-1/2 text-amber-400 font-bold text-sm sm:text-base" style={{ transform: `rotate(-${angle}deg)` }}>
-                        {num}
-                      </span>
+                    <div key={`m${i}`} className="absolute w-full h-full" style={{ transform: `rotate(${i * 6}deg)` }}>
+                      <div className="absolute left-1/2 -translate-x-1/2 rounded-full" style={{ top: '10px', width: '1.5px', height: '7px', background: 'rgba(52,211,153,0.45)' }}></div>
                     </div>
                   )
                 })}
-                {/* Center point */}
-                <div className="absolute top-1/2 left-1/2 w-4 h-4 bg-amber-400 rounded-full -translate-x-1/2 -translate-y-1/2 z-20 shadow-lg"></div>
+
+                {/* Cardinal numbers 12, 3, 6, 9 */}
+                {[12, 3, 6, 9].map(num => {
+                  const angle = num * 30
+                  return (
+                    <div key={num} className="absolute w-full h-full" style={{ transform: `rotate(${angle}deg)` }}>
+                      <span className="absolute left-1/2 font-black text-amber-300" style={{
+                        top: '27px',
+                        transform: `translateX(-50%) rotate(-${angle}deg)`,
+                        fontSize: '13px', lineHeight: 1
+                      }}>{num}</span>
+                    </div>
+                  )
+                })}
+
                 {/* Hour hand */}
-                <div className="absolute bottom-1/2 left-1/2 w-2 h-[28%] bg-amber-400 rounded-full origin-bottom -translate-x-1/2 transition-transform duration-100" style={{ transform: `translateX(-50%) rotate(${clockAngles.hour}deg)` }}></div>
+                <div className="absolute bottom-1/2 left-1/2 origin-bottom rounded-full" style={{
+                  width: '3px', height: '26%',
+                  background: '#fbbf24',
+                  transform: `translateX(-50%) rotate(${clockAngles.hour}deg)`,
+                  boxShadow: '0 0 8px rgba(251,191,36,0.8)',
+                  transition: 'transform 0.3s ease'
+                }}></div>
                 {/* Minute hand */}
-                <div className="absolute bottom-1/2 left-1/2 w-1.5 h-[38%] bg-amber-300 rounded-full origin-bottom -translate-x-1/2 transition-transform duration-100" style={{ transform: `translateX(-50%) rotate(${clockAngles.minute}deg)` }}></div>
+                <div className="absolute bottom-1/2 left-1/2 origin-bottom rounded-full" style={{
+                  width: '2px', height: '37%',
+                  background: '#fde68a',
+                  transform: `translateX(-50%) rotate(${clockAngles.minute}deg)`,
+                  boxShadow: '0 0 6px rgba(251,191,36,0.5)',
+                  transition: 'transform 0.3s ease'
+                }}></div>
                 {/* Second hand */}
-                <div className="absolute bottom-1/2 left-1/2 w-1 h-[44%] bg-red-400 rounded-full origin-bottom -translate-x-1/2 transition-transform duration-100" style={{ transform: `translateX(-50%) rotate(${clockAngles.second}deg)` }}></div>
+                <div className="absolute bottom-1/2 left-1/2 origin-bottom rounded-full" style={{
+                  width: '1.5px', height: '43%',
+                  background: '#f87171',
+                  transform: `translateX(-50%) rotate(${clockAngles.second}deg)`,
+                  boxShadow: '0 0 6px rgba(248,113,113,0.7)'
+                }}></div>
+                {/* Center dot */}
+                <div className="absolute top-1/2 left-1/2 rounded-full z-20" style={{
+                  width: '11px', height: '11px',
+                  background: '#fbbf24',
+                  transform: 'translate(-50%, -50%)',
+                  boxShadow: '0 0 12px rgba(251,191,36,1)'
+                }}></div>
               </div>
             </div>
-            
-            {/* Digital Time - Balanced */}
-            <div className="flex justify-center items-center gap-2 bg-emerald-950/50 rounded-lg p-2 border border-amber-500/30 w-full">
-              <div className="text-2xl sm:text-3xl font-mono font-bold text-amber-300">{hours}</div>
-              <span className="text-xl sm:text-2xl text-amber-500">:</span>
-              <div className="text-2xl sm:text-3xl font-mono font-bold text-amber-300">{minutes}</div>
-              <span className="text-xl sm:text-2xl text-amber-500">:</span>
-              <div className="text-2xl sm:text-3xl font-mono font-bold text-amber-300">{seconds}</div>
+          </div>
+
+          {/* Digital Time Card */}
+          <div className="rounded-2xl py-3 px-4 text-center flex-shrink-0" style={{ background: 'rgba(3,16,8,0.8)', border: '1px solid rgba(52,211,153,0.18)' }}>
+            <div className="flex items-baseline justify-center gap-1">
+              <span className="font-mono font-black text-amber-200 tabular-nums" style={{ fontSize: 'clamp(2.5rem, 5vw, 3.75rem)', letterSpacing: '0.06em' }}>{hours}</span>
+              <span className="font-mono font-bold text-amber-500" style={{ fontSize: 'clamp(1.5rem, 3vw, 2rem)', marginBottom: '2px' }}>:</span>
+              <span className="font-mono font-black text-amber-200 tabular-nums" style={{ fontSize: 'clamp(2.5rem, 5vw, 3.75rem)', letterSpacing: '0.06em' }}>{minutes}</span>
+              <span className="font-mono font-bold text-amber-500" style={{ fontSize: 'clamp(1.5rem, 3vw, 2rem)', marginBottom: '2px' }}>:</span>
+              <span className="font-mono font-bold text-amber-400 tabular-nums" style={{ fontSize: 'clamp(1.5rem, 2.5vw, 2.25rem)' }}>{seconds}</span>
             </div>
+            <p className="text-[8px] tracking-[0.5em] text-emerald-500 mt-1 uppercase">WIB • GMT+8</p>
           </div>
         </div>
-        
-        {/* Right Column - Prayer Times */}
+
+        {/* RIGHT: Prayer Times */}
         <div className="w-[62%] flex flex-col h-full">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-1 h-4 bg-amber-500 rounded-full"></div>
-            <h2 className="text-[9px] sm:text-[10px] font-medium tracking-[0.2em] text-amber-400 uppercase">JADWAL SHOLAT HARIAN</h2>
-            <div className="flex-1 h-px bg-amber-500/50"></div>
+
+          <div className="flex items-center gap-3 mb-3">
+            <div className="h-px flex-1" style={{ background: 'rgba(251,191,36,0.25)' }}></div>
+            <span className="text-[9px] font-semibold tracking-[0.28em] text-amber-400 uppercase px-2">Jadwal Sholat Harian</span>
+            <div className="h-px flex-1" style={{ background: 'rgba(251,191,36,0.25)' }}></div>
           </div>
-          
-          <div className="flex-1 bg-gradient-to-br from-emerald-900/80 to-emerald-950/80 backdrop-blur-xl rounded-2xl shadow-2xl border border-amber-500/50 flex flex-col overflow-hidden">
-            
-            {/* Next Prayer Counter */}
+
+          <div className="flex-1 rounded-2xl flex flex-col overflow-hidden" style={{ background: 'rgba(3,16,8,0.8)', border: '1px solid rgba(52,211,153,0.18)' }}>
+
+            {/* Countdown */}
             {nextPrayer && timeToNext && (
-              <div className="mx-3 mt-3 p-2 bg-amber-500/20 rounded-lg border border-amber-500/60 text-center flex-shrink-0">
-                <p className="text-amber-300 text-[10px] uppercase tracking-wider font-medium">
-                  ⟡ MENUJU {nextPrayer.name} {nextPrayer.tomorrow ? '(BESOK)' : ''} ⟡
+              <div className="mx-4 mt-4 mb-2 rounded-xl p-3 text-center flex-shrink-0" style={{
+                background: 'rgba(251,191,36,0.07)',
+                border: '1px solid rgba(251,191,36,0.4)',
+                boxShadow: '0 0 20px rgba(251,191,36,0.08)'
+              }}>
+                <p className="text-[9px] tracking-[0.3em] uppercase mb-2" style={{ color: 'rgba(251,191,36,0.65)' }}>
+                  Menuju Waktu {nextPrayer.name}{nextPrayer.tomorrow ? ' • Besok' : ''}
                 </p>
-                <p className="text-base font-mono font-bold text-amber-400 tracking-widest">
-                  {String(timeToNext.hours).padStart(2, '0')}:{String(timeToNext.minutes).padStart(2, '0')}:{String(timeToNext.seconds).padStart(2, '0')}
-                </p>
+                <div className="flex items-center justify-center gap-1">
+                  {[
+                    { val: String(timeToNext.hours).padStart(2, '0'), label: 'JAM' },
+                    { val: String(timeToNext.minutes).padStart(2, '0'), label: 'MENIT' },
+                    { val: String(timeToNext.seconds).padStart(2, '0'), label: 'DETIK' },
+                  ].map((item, i) => (
+                    <div key={i} className="flex items-center gap-1">
+                      {i > 0 && <span className="font-mono font-bold text-amber-500" style={{ fontSize: '1.6rem', marginBottom: '14px' }}>:</span>}
+                      <div className="text-center px-2">
+                        <div className="font-mono font-black text-amber-300 tabular-nums" style={{ fontSize: 'clamp(1.8rem, 3.5vw, 2.5rem)', lineHeight: 1 }}>{item.val}</div>
+                        <div className="text-[7px] tracking-widest mt-1" style={{ color: 'rgba(251,191,36,0.5)' }}>{item.label}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
-            
-            {/* Prayer List - All visible with flex */}
-            <div className="flex-1 px-3 py-3 flex flex-col justify-between">
+
+            {/* Prayer List */}
+            <div className="flex-1 px-4 py-2 flex flex-col justify-between">
               {loading ? (
-                <div className="flex justify-center items-center h-full">
-                  <div className="text-amber-400 animate-pulse text-sm">Memuat jadwal sholat...</div>
+                <div className="flex items-center justify-center h-full">
+                  <p className="text-amber-400 animate-pulse text-sm">Memuat jadwal sholat...</p>
                 </div>
               ) : error ? (
-                <div className="text-center text-amber-500/70 text-xs">{error}</div>
+                <p className="text-center text-amber-500/70 text-xs mt-4">{error}</p>
               ) : (
                 prayerTimes.map((prayer, idx) => {
                   const isNext = nextPrayer && nextPrayer.name === prayer.name && !nextPrayer.tomorrow
                   return (
-                    <div 
-                      key={idx} 
-                      className={`rounded-lg transition-all duration-300 ${
-                        isNext 
-                          ? 'bg-amber-500/25 border-l-4 border-amber-500' 
-                          : 'bg-emerald-800/30 border border-amber-500/30'
-                      }`}
+                    <div
+                      key={idx}
+                      className="rounded-xl flex items-center justify-between transition-all duration-300"
+                      style={{
+                        padding: '9px 14px',
+                        background: isNext ? 'rgba(251,191,36,0.10)' : 'rgba(3,22,10,0.6)',
+                        border: isNext ? '1px solid rgba(251,191,36,0.55)' : '1px solid rgba(52,211,153,0.12)',
+                        boxShadow: isNext ? '0 0 18px rgba(251,191,36,0.1)' : 'none'
+                      }}
                     >
-                      <div className="flex justify-between items-center py-3 px-3">
-                        <div className="flex items-center gap-2">
-                          <span className="text-2xl">{prayer.icon}</span>
-                          <div>
-                            <p className={`text-lg font-bold ${isNext ? 'text-amber-400' : 'text-amber-300'}`}>
-                              {prayer.name}
-                            </p>
-                          </div>
-                          {isNext && (
-                            <span className="ml-1 px-1.5 py-0.5 bg-amber-500 text-emerald-900 text-[8px] font-bold rounded-full">
-                              NEXT
-                            </span>
-                          )}
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full flex items-center justify-center text-xl flex-shrink-0" style={{
+                          background: isNext ? 'rgba(251,191,36,0.15)' : 'rgba(3,30,12,0.9)',
+                          border: isNext ? '1px solid rgba(251,191,36,0.35)' : '1px solid rgba(52,211,153,0.18)'
+                        }}>
+                          {prayer.icon}
                         </div>
-                        <div className="text-right">
-                          <span className={`text-lg font-mono font-bold ${isNext ? 'text-amber-400' : 'text-amber-300'}`}>
-                            {prayer.time}
+                        <p className="text-base lg:text-lg font-bold" style={{ color: isNext ? '#fde68a' : '#d1fae5' }}>
+                          {prayer.name}
+                        </p>
+                        {isNext && (
+                          <span className="px-2 py-0.5 text-[8px] font-black tracking-wider rounded-full" style={{ background: '#fbbf24', color: '#052e16' }}>
+                            SEKARANG
                           </span>
-                        </div>
+                        )}
                       </div>
+                      <span className="font-mono font-black tabular-nums" style={{
+                        fontSize: 'clamp(1.1rem, 2vw, 1.5rem)',
+                        color: isNext ? '#fcd34d' : 'rgba(251,191,36,0.65)'
+                      }}>
+                        {prayer.time}
+                      </span>
                     </div>
                   )
                 })
               )}
             </div>
-            
-            {/* Footer */}
-            <div className="p-2 border-t border-amber-500/30 text-center bg-emerald-950/40 flex-shrink-0">
-              <p className="text-amber-400/70 text-[9px]" style={{ fontFamily: "'Amiri', serif" }}>
+
+            {/* Ayat footer */}
+            <div className="px-4 py-2 text-center flex-shrink-0" style={{ borderTop: '1px solid rgba(52,211,153,0.12)', background: 'rgba(0,0,0,0.25)' }}>
+              <p className="text-[11px]" style={{ color: 'rgba(251,191,36,0.45)', fontFamily: "'Amiri', serif" }}>
                 حَافِظُوا عَلَى الصَّلَوَاتِ وَالصَّلَاةِ الْوُسْطَىٰ
               </p>
-              <p className="text-emerald-300/60 text-[7px] mt-0.5">Peliharalah segala sholat dan sholat wustha (Ashar)</p>
+              <p className="text-[7px] mt-0.5" style={{ color: 'rgba(52,211,153,0.35)' }}>Peliharalah segala sholat dan sholat wustha — Al-Baqarah: 238</p>
             </div>
           </div>
         </div>
       </main>
 
-      {/* Footer */}
-      <footer className="relative bg-gradient-to-r from-emerald-950 to-emerald-900 border-t border-amber-500/50 py-3 mt-1 z-10">
-        <div className="px-4 flex items-center justify-between text-[8px]">
-          <p className="text-amber-300">© 2026 Masjid Al Ihsan Bakrie PT.CPM</p>
-          <p className="text-amber-400 font-bold">Jadwal Sholat Digital</p>
+      {/* ── FOOTER ── */}
+      <footer className="relative h-[8vh] flex items-center px-6 lg:px-10 z-10" style={{ borderTop: '1px solid rgba(52,211,153,0.15)' }}>
+        <div className="flex items-center justify-between w-full">
+          <p className="text-[9px]" style={{ color: 'rgba(52,211,153,0.4)' }}>© 2026 Masjid Al Ihsan Bakrie PT.CPM</p>
+          <p className="text-[9px] font-semibold tracking-widest" style={{ color: 'rgba(251,191,36,0.45)' }}>JADWAL SHOLAT DIGITAL</p>
         </div>
       </footer>
     </div>

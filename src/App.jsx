@@ -2,26 +2,25 @@ import { useState, useEffect, useRef } from 'react'
 
 function App() {
   const GMT8_MS = 8 * 3600000
-  const [currentTime, setCurrentTime] = useState(new Date(Date.now() + GMT8_MS))
-  const [timeOffset, setTimeOffset] = useState(GMT8_MS)
-  const timeOffsetRef = useRef(GMT8_MS)
+  const [currentTime, setCurrentTime] = useState(null)
+  const [timeSynced, setTimeSynced] = useState(false)
+  const timeOffsetRef = useRef(null) // null = belum synced, tidak pakai hardware
   const [prayerTimes, setPrayerTimes] = useState([])
-  const [currentDate, setCurrentDate] = useState(() => {
-    const d = new Date(Date.now() + GMT8_MS)
-    return `${d.getUTCFullYear()}-${d.getUTCMonth()}-${d.getUTCDate()}`
-  })
+  const [currentDate, setCurrentDate] = useState(null)
   const [location, setLocation] = useState('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [nextPrayer, setNextPrayer] = useState(null)
 
-  // Sync ref whenever timeOffset state changes
-  useEffect(() => {
-    timeOffsetRef.current = timeOffset
-  }, [timeOffset])
+  // Adhan/Iqamah overlay
+  const [overlayMode, setOverlayMode] = useState(null) // null | 'adhan' | 'iqamah'
+  const [overlayPrayerName, setOverlayPrayerName] = useState('')
+  const overlayEndRef = useRef(null) // ms timestamp kapan fase overlay selesai
+  const triggeredRef = useRef(new Set()) // key HH:MM yg sudah trigger hari ini
 
-  // Real-time clock update - uses internet-synced GMT+8 offset
+  // Real-time clock ticker — hanya jalan jika sudah synced dari internet
   useEffect(() => {
+    if (!timeSynced) return
     let timeoutId
     const tick = () => {
       setCurrentTime(new Date(Date.now() + timeOffsetRef.current))
@@ -29,41 +28,85 @@ function App() {
     }
     tick()
     return () => clearTimeout(timeoutId)
-  }, [])
+  }, [timeSynced])
 
-  // Fetch accurate time from internet (GMT+8) and re-sync every 30 minutes
+  const timeSyncedRef = useRef(false) // ref agar closure di catch selalu baca nilai terbaru
+
+  // Fetch waktu dari internet (GMT+8), re-sync setiap 15 menit
   useEffect(() => {
     const syncTime = async () => {
+      // Coba API 1: worldtimeapi.org
       try {
-        const res = await fetch('https://worldtimeapi.org/api/timezone/Asia/Kuala_Lumpur')
+        const fetchStart = Date.now()
+        const res = await fetch('https://worldtimeapi.org/api/timezone/Asia/Kuala_Lumpur', { signal: AbortSignal.timeout(8000) })
         const data = await res.json()
-        const serverUtcMs = data.unixtime * 1000
+        const fetchEnd = Date.now()
+        const latency = (fetchEnd - fetchStart) / 2
+        // Gunakan data.datetime (ISO 8601 + timezone +08:00) bukan unixtime (hanya presisi 1 detik)
+        const serverUtcMs = new Date(data.datetime).getTime() + latency
         const offset = serverUtcMs - Date.now() + GMT8_MS
         timeOffsetRef.current = offset
-        setTimeOffset(offset)
-      } catch {
-        // Jika gagal, tetap pakai GMT+8 dari jam lokal (offset awal sudah GMT+8)
+        timeSyncedRef.current = true
+        setTimeSynced(true)
+        return
+      } catch { /* coba API berikutnya */ }
+
+      // Coba API 2: timeapi.io
+      try {
+        const fetchStart = Date.now()
+        const res = await fetch('https://timeapi.io/api/time/current/zone?timeZone=Asia%2FKuala_Lumpur', { signal: AbortSignal.timeout(8000) })
+        const data = await res.json()
+        const fetchEnd = Date.now()
+        const latency = (fetchEnd - fetchStart) / 2
+        // Tambah '+08:00' agar JS parse sebagai GMT+8, bukan local time device (bisa salah jika device UTC)
+        const serverUtcMs = new Date(data.dateTime + '+08:00').getTime() + latency
+        const offset = serverUtcMs - Date.now() + GMT8_MS
+        timeOffsetRef.current = offset
+        timeSyncedRef.current = true
+        setTimeSynced(true)
+        return
+      } catch { /* coba fallback */ }
+
+      // Fallback: pakai hardware time + GMT+8 (lebih baik ditampilkan daripada stuck)
+      if (!timeSyncedRef.current) {
+        timeOffsetRef.current = GMT8_MS
+        timeSyncedRef.current = true
+        setTimeSynced(true)
+        // Tetap coba sync ulang dalam 30 detik
+        setTimeout(async () => {
+          timeSyncedRef.current = false
+          setTimeSynced(false)
+          await syncTime()
+        }, 30000)
       }
     }
+
     syncTime()
-    const intervalId = setInterval(syncTime, 30 * 60 * 1000)
+    const intervalId = setInterval(syncTime, 15 * 60 * 1000)
     return () => clearInterval(intervalId)
   }, [])
 
   // Detect date change (GMT+8) and update currentDate to trigger prayer re-fetch
   useEffect(() => {
+    if (!currentTime) return
     const dateStr = `${currentTime.getUTCFullYear()}-${currentTime.getUTCMonth()}-${currentTime.getUTCDate()}`
     setCurrentDate(prev => prev !== dateStr ? dateStr : prev)
   }, [currentTime])
 
+  // Bersihkan triggered set saat tanggal berganti (tengah malam)
+  useEffect(() => {
+    triggeredRef.current.clear()
+  }, [currentDate])
+
   // Fetch prayer times from API
   useEffect(() => {
+    if (!currentDate) return
     const fetchPrayerSchedule = async () => {
       try {
-        const gmt8Date = new Date(Date.now() + 8 * 3600000)
-        const year = gmt8Date.getUTCFullYear()
-        const month = String(gmt8Date.getUTCMonth() + 1).padStart(2, '0')
-        const day = String(gmt8Date.getUTCDate()).padStart(2, '0')
+        // Gunakan currentDate (sudah GMT+8 dari internet) bukan Date.now() hardware
+        const [year, month0, day0] = currentDate.split('-')
+        const month = String(Number(month0) + 1).padStart(2, '0')
+        const day = day0.padStart(2, '0')
         
         const response = await fetch(`https://api.myquran.com/v2/sholat/jadwal/2813/${year}/${month}/${day}`)
         const data = await response.json()
@@ -106,7 +149,8 @@ function App() {
 
   // Determine next prayer
   useEffect(() => {
-    if (prayerTimes.length > 0) {
+    if (!currentTime || prayerTimes.length === 0) return
+    {
       const now = currentTime
       const currentHour = now.getUTCHours()
       const currentMinute = now.getUTCMinutes()
@@ -126,7 +170,42 @@ function App() {
     }
   }, [prayerTimes, currentTime])
 
+  // State machine overlay Adzan → Iqamah → Normal
+  useEffect(() => {
+    if (!currentTime || !timeSynced) return
+    const nowMs = currentTime.getTime()
+
+    // Fase Adzan selesai → pindah ke Iqamah (5 menit)
+    if (overlayMode === 'adhan' && overlayEndRef.current && nowMs >= overlayEndRef.current) {
+      overlayEndRef.current = nowMs + 5 * 60 * 1000
+      setOverlayMode('iqamah')
+      return
+    }
+    // Fase Iqamah selesai → kembali normal
+    if (overlayMode === 'iqamah' && overlayEndRef.current && nowMs >= overlayEndRef.current) {
+      setOverlayMode(null)
+      overlayEndRef.current = null
+      return
+    }
+    // Belum overlay → cek apakah tepat waktu sholat
+    if (!overlayMode && prayerTimes.length > 0 && currentDate) {
+      const hh = String(currentTime.getUTCHours()).padStart(2, '0')
+      const mm = String(currentTime.getUTCMinutes()).padStart(2, '0')
+      const timeKey = `${currentDate}_${hh}:${mm}`
+      for (const prayer of prayerTimes) {
+        if (prayer.time === `${hh}:${mm}` && !triggeredRef.current.has(timeKey)) {
+          triggeredRef.current.add(timeKey)
+          overlayEndRef.current = nowMs + 3 * 60 * 1000
+          setOverlayMode('adhan')
+          setOverlayPrayerName(prayer.name)
+          break
+        }
+      }
+    }
+  }, [currentTime, overlayMode, prayerTimes, currentDate, timeSynced])
+
   const getFormattedClock = () => {
+    if (!currentTime) return { hours: '--', minutes: '--', seconds: '--' }
     const hours = String(currentTime.getUTCHours()).padStart(2, '0')
     const minutes = String(currentTime.getUTCMinutes()).padStart(2, '0')
     const seconds = String(currentTime.getUTCSeconds()).padStart(2, '0')
@@ -134,12 +213,14 @@ function App() {
   }
   
   const getDateString = () => {
+    if (!currentTime) return 'Menyinkronisasi waktu...'
     const days = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu']
     const months = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember']
     return `${days[currentTime.getUTCDay()]}, ${currentTime.getUTCDate()} ${months[currentTime.getUTCMonth()]} ${currentTime.getUTCFullYear()}`
   }
   
   const getClockAngles = () => {
+    if (!currentTime) return { second: 0, minute: 0, hour: 0 }
     const sec = currentTime.getUTCSeconds()
     const min = currentTime.getUTCMinutes()
     const hrs = currentTime.getUTCHours() % 12
@@ -154,7 +235,7 @@ function App() {
   const { hours, minutes, seconds } = getFormattedClock()
   
   const getTimeToNext = () => {
-    if (!nextPrayer) return null
+    if (!nextPrayer || !currentTime) return null
     const now = currentTime
     const [prayerHour, prayerMin] = nextPrayer.time.split(':').map(Number)
     const midnightMs = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())
@@ -172,9 +253,117 @@ function App() {
   
   const timeToNext = getTimeToNext()
 
+  // Hitung sisa detik overlay
+  const overlaySecondsLeft = overlayMode && overlayEndRef.current && currentTime
+    ? Math.max(0, Math.ceil((overlayEndRef.current - currentTime.getTime()) / 1000))
+    : 0
+  const overlayMM = String(Math.floor(overlaySecondsLeft / 60)).padStart(2, '0')
+  const overlaySS = String(overlaySecondsLeft % 60).padStart(2, '0')
+  const prayerArabicNames = { 'Subuh': 'الفَجْر', 'Dzuhur': 'الظُّهْر', 'Ashar': 'العَصْر', 'Maghrib': 'المَغْرِب', 'Isya': 'العِشَاء' }
+
   return (
     /* Root: fixed inset-0 — lebih reliable dari h-screen di Android TV browser */
     <div className="font-sans" style={{ position: 'fixed', inset: 0, overflow: 'hidden', background: '#060f08' }}>
+
+      {/* ─── OVERLAY ADZAN / IQAMAH (full screen, z-index 100) ─── */}
+      {overlayMode && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 100,
+          background: overlayMode === 'adhan'
+            ? 'radial-gradient(ellipse at center, #052e16 0%, #031408 55%, #000 100%)'
+            : 'radial-gradient(ellipse at center, #0c1a3a 0%, #050d1f 55%, #000 100%)',
+          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+          overflow: 'hidden'
+        }}>
+          {/* Lingkaran dekorasi luar */}
+          <div style={{ position: 'absolute', width: '110vmin', height: '110vmin', borderRadius: '50%', border: '1px solid rgba(251,191,36,0.08)', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', pointerEvents: 'none' }}></div>
+          <div style={{ position: 'absolute', width: '85vmin', height: '85vmin', borderRadius: '50%', border: '1px solid rgba(251,191,36,0.12)', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', pointerEvents: 'none' }}></div>
+          <div style={{ position: 'absolute', width: '62vmin', height: '62vmin', borderRadius: '50%', border: '1px solid rgba(251,191,36,0.18)', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', pointerEvents: 'none' }}></div>
+          {/* Glow tengah */}
+          <div style={{ position: 'absolute', width: '50vmin', height: '50vmin', borderRadius: '50%', background: overlayMode === 'adhan' ? 'radial-gradient(circle, rgba(245,158,11,0.12), transparent 70%)' : 'radial-gradient(circle, rgba(99,102,241,0.15), transparent 70%)', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', pointerEvents: 'none' }}></div>
+
+          {/* Konten utama */}
+          <div style={{ position: 'relative', zIndex: 1, textAlign: 'center', padding: '0 5vw' }}>
+
+            {/* Badge mode */}
+            <div style={{
+              display: 'inline-block', padding: '0.6vh 2.5vw', marginBottom: '2vh',
+              borderRadius: '99px', border: '1px solid rgba(251,191,36,0.5)',
+              background: 'rgba(251,191,36,0.1)',
+              fontSize: 'clamp(12px, 1.1vw, 18px)', fontWeight: 700, letterSpacing: '0.3em',
+              color: '#fbbf24', textTransform: 'uppercase'
+            }}>
+              {overlayMode === 'adhan' ? '— WAKTU ADZAN —' : '— IQAMAH —'}
+            </div>
+
+            {/* Nama sholat Arab */}
+            <div style={{
+              fontFamily: "'Amiri', 'Arial', serif",
+              fontSize: 'clamp(3rem, 10vw, 9rem)',
+              color: '#fde68a',
+              lineHeight: 1.1,
+              marginBottom: '1.5vh',
+              textShadow: '0 0 40px rgba(251,191,36,0.4)'
+            }}>
+              {prayerArabicNames[overlayPrayerName] || overlayPrayerName}
+            </div>
+
+            {/* Nama sholat Indonesia */}
+            <div style={{
+              fontSize: 'clamp(1.8rem, 5vw, 5.5rem)',
+              fontWeight: 900,
+              color: '#ffffff',
+              letterSpacing: '0.15em',
+              textTransform: 'uppercase',
+              marginBottom: '1vh'
+            }}>
+              {overlayMode === 'adhan' ? `ADZAN ${overlayPrayerName.toUpperCase()}` : `IQAMAH ${overlayPrayerName.toUpperCase()}`}
+            </div>
+
+            {/* Pesan */}
+            <div style={{
+              fontSize: 'clamp(12px, 1.4vw, 22px)',
+              color: 'rgba(52,211,153,0.85)',
+              letterSpacing: '0.1em',
+              marginBottom: '4vh'
+            }}>
+              {overlayMode === 'adhan' ? 'Berhenti sejenak dari aktivitas • Bersiap menunaikan sholat' : 'Sholat akan segera dimulai • Rapikan barisan'}
+            </div>
+
+            {/* Countdown box */}
+            <div style={{
+              display: 'inline-flex', flexDirection: 'column', alignItems: 'center',
+              padding: '2vh 5vw', borderRadius: '16px',
+              border: '1px solid rgba(251,191,36,0.4)',
+              background: 'rgba(0,0,0,0.35)',
+              boxShadow: '0 0 30px rgba(251,191,36,0.08)'
+            }}>
+              <div style={{
+                fontFamily: 'monospace', fontWeight: 900,
+                fontSize: 'clamp(3rem, 8vw, 8rem)',
+                color: '#fcd34d',
+                letterSpacing: '0.08em',
+                fontVariantNumeric: 'tabular-nums',
+                lineHeight: 1,
+                textShadow: '0 0 20px rgba(252,211,77,0.5)'
+              }}>
+                {overlayMM}:{overlaySS}
+              </div>
+              <div style={{
+                fontSize: 'clamp(11px, 1vw, 16px)', letterSpacing: '0.3em',
+                color: 'rgba(251,191,36,0.55)', marginTop: '0.8vh', textTransform: 'uppercase'
+              }}>
+                {overlayMode === 'adhan' ? 'Hingga Iqamah' : 'Hingga Sholat Dimulai'}
+              </div>
+            </div>
+
+            {/* Jam sekarang */}
+            <div style={{ marginTop: '3vh', fontSize: 'clamp(14px, 1.5vw, 22px)', color: 'rgba(255,255,255,0.3)', fontFamily: 'monospace', letterSpacing: '0.2em' }}>
+              {hours}:{minutes} WIB
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Islamic Geometric Background Pattern */}
       <div style={{ position: 'absolute', inset: 0, opacity: 0.055, pointerEvents: 'none' }}>
@@ -271,8 +460,7 @@ function App() {
                         <span style={{
                           position: 'absolute', left: '50%', top: '11%',
                           transform: `translateX(-50%) rotate(-${angle}deg)`,
-                          color: '#fcd34d', fontWeight: 900, fontSize: '3.5%', lineHeight: 1,
-                          fontSize: 'clamp(11px, 1.2vw, 18px)'
+                          color: '#fcd34d', fontWeight: 900, fontSize: 'clamp(11px, 1.2vw, 18px)', lineHeight: 1,
                         }}>{num}</span>
                       </div>
                     )

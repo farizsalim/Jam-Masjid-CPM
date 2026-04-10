@@ -173,247 +173,276 @@ function App() {
   const timeToNext = getTimeToNext()
 
   return (
-    <div className="h-screen w-screen overflow-hidden font-sans relative" style={{ background: '#060f08' }}>
+    /* Root: fixed inset-0 — lebih reliable dari h-screen di Android TV browser */
+    <div className="font-sans" style={{ position: 'fixed', inset: 0, overflow: 'hidden', background: '#060f08' }}>
 
       {/* Islamic Geometric Background Pattern */}
-      <div className="absolute inset-0" style={{ opacity: 0.055 }}>
-        <div className="absolute inset-0" style={{
+      <div style={{ position: 'absolute', inset: 0, opacity: 0.055, pointerEvents: 'none' }}>
+        <div style={{
+          position: 'absolute', inset: 0,
           backgroundImage: `url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%23FFD700' stroke-width='0.8'%3E%3Crect x='10' y='10' width='80' height='80' transform='rotate(45 50 50)'/%3E%3Crect x='22' y='22' width='56' height='56' transform='rotate(45 50 50)'/%3E%3Ccircle cx='50' cy='50' r='28'/%3E%3Ccircle cx='50' cy='50' r='8'/%3E%3Cline x1='50' y1='0' x2='50' y2='22'/%3E%3Cline x1='50' y1='78' x2='50' y2='100'/%3E%3Cline x1='0' y1='50' x2='22' y2='50'/%3E%3Cline x1='78' y1='50' x2='100' y2='50'/%3E%3C/g%3E%3C/svg%3E")`,
           backgroundSize: '100px 100px'
         }}></div>
       </div>
 
       {/* Ambient corner glows */}
-      <div className="absolute -top-32 -right-32 w-[500px] h-[500px] rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(245,158,11,0.12), transparent 70%)' }}></div>
-      <div className="absolute -bottom-32 -left-32 w-[500px] h-[500px] rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(6,78,59,0.25), transparent 70%)' }}></div>
+      <div style={{ position: 'absolute', top: '-8vh', right: '-8vw', width: '45vw', height: '45vw', borderRadius: '50%', background: 'radial-gradient(circle, rgba(245,158,11,0.11), transparent 70%)', pointerEvents: 'none' }}></div>
+      <div style={{ position: 'absolute', bottom: '-8vh', left: '-8vw', width: '40vw', height: '40vw', borderRadius: '50%', background: 'radial-gradient(circle, rgba(6,78,59,0.22), transparent 70%)', pointerEvents: 'none' }}></div>
 
-      {/* ── HEADER ── */}
-      <header className="relative h-[12vh] flex items-center px-6 lg:px-10 z-10" style={{ borderBottom: '1px solid rgba(251,191,36,0.25)' }}>
-        <div className="flex items-center justify-between w-full">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-full bg-amber-500 flex items-center justify-center flex-shrink-0" style={{ boxShadow: '0 0 22px rgba(251,191,36,0.45)' }}>
-              <span className="text-2xl">🕌</span>
-            </div>
-            <div>
-              <h1 className="text-sm lg:text-base xl:text-lg font-black text-amber-200 tracking-wide leading-tight">
-                MASJID AL IHSAN BAKRIE PT.CPM
-              </h1>
-              <p className="text-[9px] lg:text-[10px] text-emerald-400 tracking-[0.35em] mt-0.5">BERKAH • ISTIQOMAH • BERDAYA</p>
-            </div>
-          </div>
-          <div className="text-right">
-            <p className="text-sm lg:text-base font-semibold text-amber-200">{getDateString()}</p>
-            <p className="text-xs text-amber-400/60 mt-0.5" style={{ fontFamily: "'Amiri', serif" }}>بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ</p>
-          </div>
-        </div>
-      </header>
+      {/* ── SAFE ZONE WRAPPER — mengimbangi overscan TV (2vh atas/bawah, 2.5vw kiri/kanan) ── */}
+      <div style={{
+        position: 'absolute',
+        inset: '2vh 2.5vw',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden'
+      }}>
 
-      {/* ── MAIN ── */}
-      <main className="h-[80vh] px-4 lg:px-8 py-3 flex gap-5 z-10 relative">
-
-        {/* LEFT: Clock */}
-        <div className="w-[38%] flex flex-col gap-3 h-full">
-
-          <div className="flex items-center gap-2">
-            <div className="w-1 h-4 rounded-full bg-amber-400"></div>
-            <span className="text-[9px] font-semibold tracking-[0.28em] text-amber-400 uppercase">Waktu Sekarang</span>
-            <div className="flex-1 h-px" style={{ background: 'rgba(251,191,36,0.25)' }}></div>
-          </div>
-
-          {/* Analog Clock Card */}
-          <div className="flex-1 rounded-2xl flex items-center justify-center p-4" style={{ background: 'rgba(3,16,8,0.8)', border: '1px solid rgba(52,211,153,0.18)' }}>
-            <div className="relative w-full max-w-[290px] aspect-square">
-              <div className="relative w-full h-full rounded-full" style={{
-                background: '#030d05',
-                border: '8px solid #fbbf24',
-                boxShadow: '0 0 30px rgba(251,191,36,0.3), 0 0 60px rgba(251,191,36,0.1), inset 0 0 50px rgba(0,0,0,0.6)'
-              }}>
-
-                {/* Hour tick marks */}
-                {[...Array(12)].map((_, i) => (
-                  <div key={`h${i}`} className="absolute w-full h-full" style={{ transform: `rotate(${i * 30}deg)` }}>
-                    <div className="absolute left-1/2 -translate-x-1/2 rounded-full" style={{ top: '9px', width: '3px', height: '14px', background: '#fbbf24' }}></div>
-                  </div>
-                ))}
-
-                {/* Minute tick marks */}
-                {[...Array(60)].map((_, i) => {
-                  if (i % 5 === 0) return null
-                  return (
-                    <div key={`m${i}`} className="absolute w-full h-full" style={{ transform: `rotate(${i * 6}deg)` }}>
-                      <div className="absolute left-1/2 -translate-x-1/2 rounded-full" style={{ top: '10px', width: '1.5px', height: '7px', background: 'rgba(52,211,153,0.45)' }}></div>
-                    </div>
-                  )
-                })}
-
-                {/* Cardinal numbers 12, 3, 6, 9 */}
-                {[12, 3, 6, 9].map(num => {
-                  const angle = num * 30
-                  return (
-                    <div key={num} className="absolute w-full h-full" style={{ transform: `rotate(${angle}deg)` }}>
-                      <span className="absolute left-1/2 font-black text-amber-300" style={{
-                        top: '27px',
-                        transform: `translateX(-50%) rotate(-${angle}deg)`,
-                        fontSize: '13px', lineHeight: 1
-                      }}>{num}</span>
-                    </div>
-                  )
-                })}
-
-                {/* Hour hand */}
-                <div className="absolute bottom-1/2 left-1/2 origin-bottom rounded-full" style={{
-                  width: '3px', height: '26%',
-                  background: '#fbbf24',
-                  transform: `translateX(-50%) rotate(${clockAngles.hour}deg)`,
-                  boxShadow: '0 0 8px rgba(251,191,36,0.8)',
-                  transition: 'transform 0.3s ease'
-                }}></div>
-                {/* Minute hand */}
-                <div className="absolute bottom-1/2 left-1/2 origin-bottom rounded-full" style={{
-                  width: '2px', height: '37%',
-                  background: '#fde68a',
-                  transform: `translateX(-50%) rotate(${clockAngles.minute}deg)`,
-                  boxShadow: '0 0 6px rgba(251,191,36,0.5)',
-                  transition: 'transform 0.3s ease'
-                }}></div>
-                {/* Second hand */}
-                <div className="absolute bottom-1/2 left-1/2 origin-bottom rounded-full" style={{
-                  width: '1.5px', height: '43%',
-                  background: '#f87171',
-                  transform: `translateX(-50%) rotate(${clockAngles.second}deg)`,
-                  boxShadow: '0 0 6px rgba(248,113,113,0.7)'
-                }}></div>
-                {/* Center dot */}
-                <div className="absolute top-1/2 left-1/2 rounded-full z-20" style={{
-                  width: '11px', height: '11px',
-                  background: '#fbbf24',
-                  transform: 'translate(-50%, -50%)',
-                  boxShadow: '0 0 12px rgba(251,191,36,1)'
-                }}></div>
+        {/* ── HEADER ── */}
+        <header style={{ flexShrink: 0, borderBottom: '1px solid rgba(251,191,36,0.25)', paddingBottom: '1.2vh', marginBottom: '1vh' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1vw' }}>
+              <div style={{
+                width: '5.5vh', height: '5.5vh', borderRadius: '50%', background: '#f59e0b',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                boxShadow: '0 0 20px rgba(251,191,36,0.45)', fontSize: '2.8vh'
+              }}>🕌</div>
+              <div>
+                <h1 style={{ fontSize: 'clamp(14px, 1.8vw, 28px)', fontWeight: 900, color: '#fde68a', letterSpacing: '0.05em', lineHeight: 1.2 }}>
+                  MASJID AL IHSAN BAKRIE PT.CPM
+                </h1>
+                <p style={{ fontSize: 'clamp(10px, 0.9vw, 14px)', color: '#34d399', letterSpacing: '0.3em', marginTop: '0.3vh' }}>
+                  BERKAH • ISTIQOMAH • BERDAYA
+                </p>
               </div>
             </div>
-          </div>
-
-          {/* Digital Time Card */}
-          <div className="rounded-2xl py-3 px-4 text-center flex-shrink-0" style={{ background: 'rgba(3,16,8,0.8)', border: '1px solid rgba(52,211,153,0.18)' }}>
-            <div className="flex items-baseline justify-center gap-1">
-              <span className="font-mono font-black text-amber-200 tabular-nums" style={{ fontSize: 'clamp(2.5rem, 5vw, 3.75rem)', letterSpacing: '0.06em' }}>{hours}</span>
-              <span className="font-mono font-bold text-amber-500" style={{ fontSize: 'clamp(1.5rem, 3vw, 2rem)', marginBottom: '2px' }}>:</span>
-              <span className="font-mono font-black text-amber-200 tabular-nums" style={{ fontSize: 'clamp(2.5rem, 5vw, 3.75rem)', letterSpacing: '0.06em' }}>{minutes}</span>
-              <span className="font-mono font-bold text-amber-500" style={{ fontSize: 'clamp(1.5rem, 3vw, 2rem)', marginBottom: '2px' }}>:</span>
-              <span className="font-mono font-bold text-amber-400 tabular-nums" style={{ fontSize: 'clamp(1.5rem, 2.5vw, 2.25rem)' }}>{seconds}</span>
+            <div style={{ textAlign: 'right' }}>
+              <p style={{ fontSize: 'clamp(13px, 1.6vw, 24px)', fontWeight: 600, color: '#fde68a' }}>{getDateString()}</p>
+              <p style={{ fontSize: 'clamp(11px, 1vw, 16px)', color: 'rgba(251,191,36,0.55)', marginTop: '0.3vh', fontFamily: "'Amiri', serif" }}>
+                بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ
+              </p>
             </div>
-            <p className="text-[8px] tracking-[0.5em] text-emerald-500 mt-1 uppercase">WIB • GMT+8</p>
           </div>
-        </div>
+        </header>
 
-        {/* RIGHT: Prayer Times */}
-        <div className="w-[62%] flex flex-col h-full">
+        {/* ── MAIN — flex:1 + minHeight:0 agar tidak overflow ke luar ── */}
+        <main style={{ flex: 1, minHeight: 0, display: 'flex', gap: '2vw' }}>
 
-          <div className="flex items-center gap-3 mb-3">
-            <div className="h-px flex-1" style={{ background: 'rgba(251,191,36,0.25)' }}></div>
-            <span className="text-[9px] font-semibold tracking-[0.28em] text-amber-400 uppercase px-2">Jadwal Sholat Harian</span>
-            <div className="h-px flex-1" style={{ background: 'rgba(251,191,36,0.25)' }}></div>
-          </div>
+          {/* LEFT: Clock (38%) */}
+          <div style={{ width: '38%', display: 'flex', flexDirection: 'column', gap: '1vh', minHeight: 0 }}>
 
-          <div className="flex-1 rounded-2xl flex flex-col overflow-hidden" style={{ background: 'rgba(3,16,8,0.8)', border: '1px solid rgba(52,211,153,0.18)' }}>
+            {/* Label */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6vw', flexShrink: 0 }}>
+              <div style={{ width: '0.3vw', height: '2.5vh', borderRadius: '99px', background: '#fbbf24' }}></div>
+              <span style={{ fontSize: 'clamp(10px, 0.85vw, 13px)', fontWeight: 700, letterSpacing: '0.25em', color: '#fbbf24', textTransform: 'uppercase' }}>Waktu Sekarang</span>
+              <div style={{ flex: 1, height: '1px', background: 'rgba(251,191,36,0.25)' }}></div>
+            </div>
 
-            {/* Countdown */}
-            {nextPrayer && timeToNext && (
-              <div className="mx-4 mt-4 mb-2 rounded-xl p-3 text-center flex-shrink-0" style={{
-                background: 'rgba(251,191,36,0.07)',
-                border: '1px solid rgba(251,191,36,0.4)',
-                boxShadow: '0 0 20px rgba(251,191,36,0.08)'
-              }}>
-                <p className="text-[9px] tracking-[0.3em] uppercase mb-2" style={{ color: 'rgba(251,191,36,0.65)' }}>
-                  Menuju Waktu {nextPrayer.name}{nextPrayer.tomorrow ? ' • Besok' : ''}
-                </p>
-                <div className="flex items-center justify-center gap-1">
-                  {[
-                    { val: String(timeToNext.hours).padStart(2, '0'), label: 'JAM' },
-                    { val: String(timeToNext.minutes).padStart(2, '0'), label: 'MENIT' },
-                    { val: String(timeToNext.seconds).padStart(2, '0'), label: 'DETIK' },
-                  ].map((item, i) => (
-                    <div key={i} className="flex items-center gap-1">
-                      {i > 0 && <span className="font-mono font-bold text-amber-500" style={{ fontSize: '1.6rem', marginBottom: '14px' }}>:</span>}
-                      <div className="text-center px-2">
-                        <div className="font-mono font-black text-amber-300 tabular-nums" style={{ fontSize: 'clamp(1.8rem, 3.5vw, 2.5rem)', lineHeight: 1 }}>{item.val}</div>
-                        <div className="text-[7px] tracking-widest mt-1" style={{ color: 'rgba(251,191,36,0.5)' }}>{item.label}</div>
-                      </div>
+            {/* Analog Clock Card */}
+            <div style={{ flex: 1, minHeight: 0, borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2vh 1vw', background: 'rgba(3,16,8,0.85)', border: '1px solid rgba(52,211,153,0.2)' }}>
+              {/* Clock: size = min available width, max 38vh to stay square & proportional */}
+              <div style={{ width: 'min(100%, 38vh)', aspectRatio: '1 / 1', position: 'relative' }}>
+                <div style={{
+                  position: 'relative', width: '100%', height: '100%', borderRadius: '50%',
+                  background: '#030d05',
+                  border: '0.6vh solid #fbbf24',
+                  boxShadow: '0 0 3vh rgba(251,191,36,0.35), 0 0 6vh rgba(251,191,36,0.1), inset 0 0 5vh rgba(0,0,0,0.6)'
+                }}>
+                  {/* Hour ticks */}
+                  {[...Array(12)].map((_, i) => (
+                    <div key={`h${i}`} style={{ position: 'absolute', width: '100%', height: '100%', transform: `rotate(${i * 30}deg)` }}>
+                      <div style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', top: '4%', width: '3.5%', height: '6%', background: '#fbbf24', borderRadius: '2px' }}></div>
                     </div>
                   ))}
+                  {/* Minute ticks */}
+                  {[...Array(60)].map((_, i) => {
+                    if (i % 5 === 0) return null
+                    return (
+                      <div key={`m${i}`} style={{ position: 'absolute', width: '100%', height: '100%', transform: `rotate(${i * 6}deg)` }}>
+                        <div style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', top: '4%', width: '1.5%', height: '3%', background: 'rgba(52,211,153,0.4)', borderRadius: '1px' }}></div>
+                      </div>
+                    )
+                  })}
+                  {/* Cardinal numbers */}
+                  {[12, 3, 6, 9].map(num => {
+                    const angle = num * 30
+                    return (
+                      <div key={num} style={{ position: 'absolute', width: '100%', height: '100%', transform: `rotate(${angle}deg)` }}>
+                        <span style={{
+                          position: 'absolute', left: '50%', top: '11%',
+                          transform: `translateX(-50%) rotate(-${angle}deg)`,
+                          color: '#fcd34d', fontWeight: 900, fontSize: '3.5%', lineHeight: 1,
+                          fontSize: 'clamp(11px, 1.2vw, 18px)'
+                        }}>{num}</span>
+                      </div>
+                    )
+                  })}
+                  {/* Hour hand */}
+                  <div style={{
+                    position: 'absolute', bottom: '50%', left: '50%',
+                    width: '3%', height: '28%',
+                    background: '#fbbf24', borderRadius: '99px',
+                    transformOrigin: 'bottom center',
+                    transform: `translateX(-50%) rotate(${clockAngles.hour}deg)`,
+                    boxShadow: '0 0 8px rgba(251,191,36,0.9)'
+                  }}></div>
+                  {/* Minute hand */}
+                  <div style={{
+                    position: 'absolute', bottom: '50%', left: '50%',
+                    width: '2%', height: '38%',
+                    background: '#fde68a', borderRadius: '99px',
+                    transformOrigin: 'bottom center',
+                    transform: `translateX(-50%) rotate(${clockAngles.minute}deg)`,
+                    boxShadow: '0 0 6px rgba(251,191,36,0.5)'
+                  }}></div>
+                  {/* Second hand */}
+                  <div style={{
+                    position: 'absolute', bottom: '50%', left: '50%',
+                    width: '1.2%', height: '44%',
+                    background: '#f87171', borderRadius: '99px',
+                    transformOrigin: 'bottom center',
+                    transform: `translateX(-50%) rotate(${clockAngles.second}deg)`,
+                    boxShadow: '0 0 6px rgba(248,113,113,0.8)'
+                  }}></div>
+                  {/* Center dot */}
+                  <div style={{
+                    position: 'absolute', top: '50%', left: '50%',
+                    width: '3.5%', height: '3.5%', borderRadius: '50%',
+                    background: '#fbbf24',
+                    transform: 'translate(-50%, -50%)',
+                    boxShadow: '0 0 10px rgba(251,191,36,1)',
+                    zIndex: 20
+                  }}></div>
                 </div>
               </div>
-            )}
-
-            {/* Prayer List */}
-            <div className="flex-1 px-4 py-2 flex flex-col justify-between">
-              {loading ? (
-                <div className="flex items-center justify-center h-full">
-                  <p className="text-amber-400 animate-pulse text-sm">Memuat jadwal sholat...</p>
-                </div>
-              ) : error ? (
-                <p className="text-center text-amber-500/70 text-xs mt-4">{error}</p>
-              ) : (
-                prayerTimes.map((prayer, idx) => {
-                  const isNext = nextPrayer && nextPrayer.name === prayer.name && !nextPrayer.tomorrow
-                  return (
-                    <div
-                      key={idx}
-                      className="rounded-xl flex items-center justify-between transition-all duration-300"
-                      style={{
-                        padding: '9px 14px',
-                        background: isNext ? 'rgba(251,191,36,0.10)' : 'rgba(3,22,10,0.6)',
-                        border: isNext ? '1px solid rgba(251,191,36,0.55)' : '1px solid rgba(52,211,153,0.12)',
-                        boxShadow: isNext ? '0 0 18px rgba(251,191,36,0.1)' : 'none'
-                      }}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full flex items-center justify-center text-xl flex-shrink-0" style={{
-                          background: isNext ? 'rgba(251,191,36,0.15)' : 'rgba(3,30,12,0.9)',
-                          border: isNext ? '1px solid rgba(251,191,36,0.35)' : '1px solid rgba(52,211,153,0.18)'
-                        }}>
-                          {prayer.icon}
-                        </div>
-                        <p className="text-base lg:text-lg font-bold" style={{ color: isNext ? '#fde68a' : '#d1fae5' }}>
-                          {prayer.name}
-                        </p>
-                        {isNext && (
-                          <span className="px-2 py-0.5 text-[8px] font-black tracking-wider rounded-full" style={{ background: '#fbbf24', color: '#052e16' }}>
-                            SEKARANG
-                          </span>
-                        )}
-                      </div>
-                      <span className="font-mono font-black tabular-nums" style={{
-                        fontSize: 'clamp(1.1rem, 2vw, 1.5rem)',
-                        color: isNext ? '#fcd34d' : 'rgba(251,191,36,0.65)'
-                      }}>
-                        {prayer.time}
-                      </span>
-                    </div>
-                  )
-                })
-              )}
             </div>
 
-            {/* Ayat footer */}
-            <div className="px-4 py-2 text-center flex-shrink-0" style={{ borderTop: '1px solid rgba(52,211,153,0.12)', background: 'rgba(0,0,0,0.25)' }}>
-              <p className="text-[11px]" style={{ color: 'rgba(251,191,36,0.45)', fontFamily: "'Amiri', serif" }}>
-                حَافِظُوا عَلَى الصَّلَوَاتِ وَالصَّلَاةِ الْوُسْطَىٰ
-              </p>
-              <p className="text-[7px] mt-0.5" style={{ color: 'rgba(52,211,153,0.35)' }}>Peliharalah segala sholat dan sholat wustha — Al-Baqarah: 238</p>
+            {/* Digital Time Card */}
+            <div style={{ flexShrink: 0, borderRadius: '14px', padding: '1.2vh 1vw', textAlign: 'center', background: 'rgba(3,16,8,0.85)', border: '1px solid rgba(52,211,153,0.2)' }}>
+              <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: '0.3vw' }}>
+                <span style={{ fontFamily: 'monospace', fontWeight: 900, color: '#fde68a', fontSize: 'clamp(2rem, 4.5vw, 5rem)', letterSpacing: '0.06em', fontVariantNumeric: 'tabular-nums' }}>{hours}</span>
+                <span style={{ fontFamily: 'monospace', fontWeight: 700, color: '#f59e0b', fontSize: 'clamp(1.4rem, 3vw, 3.5rem)' }}>:</span>
+                <span style={{ fontFamily: 'monospace', fontWeight: 900, color: '#fde68a', fontSize: 'clamp(2rem, 4.5vw, 5rem)', letterSpacing: '0.06em', fontVariantNumeric: 'tabular-nums' }}>{minutes}</span>
+                <span style={{ fontFamily: 'monospace', fontWeight: 700, color: '#f59e0b', fontSize: 'clamp(1.4rem, 3vw, 3.5rem)' }}>:</span>
+                <span style={{ fontFamily: 'monospace', fontWeight: 700, color: '#fbbf24', fontSize: 'clamp(1.2rem, 2.2vw, 2.8rem)', fontVariantNumeric: 'tabular-nums' }}>{seconds}</span>
+              </div>
+              <p style={{ fontSize: 'clamp(10px, 0.75vw, 13px)', letterSpacing: '0.45em', color: '#10b981', marginTop: '0.4vh', textTransform: 'uppercase' }}>WIB • GMT+8</p>
             </div>
           </div>
-        </div>
-      </main>
 
-      {/* ── FOOTER ── */}
-      <footer className="relative h-[8vh] flex items-center px-6 lg:px-10 z-10" style={{ borderTop: '1px solid rgba(52,211,153,0.15)' }}>
-        <div className="flex items-center justify-between w-full">
-          <p className="text-[9px]" style={{ color: 'rgba(52,211,153,0.4)' }}>© 2026 Masjid Al Ihsan Bakrie PT.CPM</p>
-          <p className="text-[9px] font-semibold tracking-widest" style={{ color: 'rgba(251,191,36,0.45)' }}>JADWAL SHOLAT DIGITAL</p>
-        </div>
-      </footer>
+          {/* RIGHT: Prayer Times (62%) */}
+          <div style={{ width: '62%', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+
+            {/* Label */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.8vw', flexShrink: 0, marginBottom: '1vh' }}>
+              <div style={{ flex: 1, height: '1px', background: 'rgba(251,191,36,0.25)' }}></div>
+              <span style={{ fontSize: 'clamp(10px, 0.85vw, 13px)', fontWeight: 700, letterSpacing: '0.25em', color: '#fbbf24', textTransform: 'uppercase', padding: '0 0.5vw' }}>Jadwal Sholat Harian</span>
+              <div style={{ flex: 1, height: '1px', background: 'rgba(251,191,36,0.25)' }}></div>
+            </div>
+
+            <div style={{ flex: 1, minHeight: 0, borderRadius: '16px', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'rgba(3,16,8,0.85)', border: '1px solid rgba(52,211,153,0.2)' }}>
+
+              {/* Countdown */}
+              {nextPrayer && timeToNext && (
+                <div style={{
+                  flexShrink: 0, margin: '1.5vh 1.5vw 0.8vh',
+                  borderRadius: '12px', padding: '1vh 1vw', textAlign: 'center',
+                  background: 'rgba(251,191,36,0.07)',
+                  border: '1px solid rgba(251,191,36,0.4)',
+                  boxShadow: '0 0 20px rgba(251,191,36,0.07)'
+                }}>
+                  <p style={{ fontSize: 'clamp(10px, 0.8vw, 13px)', letterSpacing: '0.25em', textTransform: 'uppercase', color: 'rgba(251,191,36,0.65)', marginBottom: '0.5vh' }}>
+                    Menuju Waktu {nextPrayer.name}{nextPrayer.tomorrow ? ' • Besok' : ''}
+                  </p>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.3vw' }}>
+                    {[
+                      { val: String(timeToNext.hours).padStart(2, '0'), label: 'JAM' },
+                      { val: String(timeToNext.minutes).padStart(2, '0'), label: 'MENIT' },
+                      { val: String(timeToNext.seconds).padStart(2, '0'), label: 'DETIK' },
+                    ].map((item, i) => (
+                      <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.3vw' }}>
+                        {i > 0 && <span style={{ fontFamily: 'monospace', fontWeight: 700, color: '#f59e0b', fontSize: 'clamp(1.2rem, 2.5vw, 2.8rem)', marginBottom: '1.2vh' }}>:</span>}
+                        <div style={{ textAlign: 'center', padding: '0 0.4vw' }}>
+                          <div style={{ fontFamily: 'monospace', fontWeight: 900, color: '#fcd34d', fontSize: 'clamp(1.6rem, 3vw, 3.5rem)', lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>{item.val}</div>
+                          <div style={{ fontSize: 'clamp(9px, 0.65vw, 11px)', letterSpacing: '0.2em', color: 'rgba(251,191,36,0.5)', marginTop: '0.3vh' }}>{item.label}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Prayer List */}
+              <div style={{ flex: 1, minHeight: 0, padding: '0 1.2vw', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', paddingBottom: '1vh' }}>
+                {loading ? (
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
+                    <p style={{ color: '#fbbf24', fontSize: 'clamp(13px, 1.2vw, 18px)' }}>Memuat jadwal sholat...</p>
+                  </div>
+                ) : error ? (
+                  <p style={{ textAlign: 'center', color: 'rgba(251,191,36,0.6)', fontSize: 'clamp(12px, 1vw, 16px)', marginTop: '2vh' }}>{error}</p>
+                ) : (
+                  prayerTimes.map((prayer, idx) => {
+                    const isNext = nextPrayer && nextPrayer.name === prayer.name && !nextPrayer.tomorrow
+                    return (
+                      <div
+                        key={idx}
+                        style={{
+                          borderRadius: '12px',
+                          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                          padding: '0.9vh 1.2vw',
+                          background: isNext ? 'rgba(251,191,36,0.10)' : 'rgba(3,22,10,0.6)',
+                          border: isNext ? '1px solid rgba(251,191,36,0.55)' : '1px solid rgba(52,211,153,0.13)',
+                          boxShadow: isNext ? '0 0 16px rgba(251,191,36,0.1)' : 'none'
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '1vw' }}>
+                          <div style={{
+                            width: '4.5vh', height: '4.5vh', borderRadius: '50%',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            fontSize: 'clamp(16px, 2vh, 26px)', flexShrink: 0,
+                            background: isNext ? 'rgba(251,191,36,0.15)' : 'rgba(3,30,12,0.9)',
+                            border: isNext ? '1px solid rgba(251,191,36,0.35)' : '1px solid rgba(52,211,153,0.18)'
+                          }}>
+                            {prayer.icon}
+                          </div>
+                          <p style={{ fontSize: 'clamp(14px, 1.7vw, 26px)', fontWeight: 700, color: isNext ? '#fde68a' : '#d1fae5' }}>
+                            {prayer.name}
+                          </p>
+                          {isNext && (
+                            <span style={{ padding: '0.3vh 0.7vw', fontSize: 'clamp(9px, 0.7vw, 12px)', fontWeight: 900, letterSpacing: '0.15em', borderRadius: '99px', background: '#fbbf24', color: '#052e16' }}>
+                              SEKARANG
+                            </span>
+                          )}
+                        </div>
+                        <span style={{ fontFamily: 'monospace', fontWeight: 900, fontSize: 'clamp(1.2rem, 2.2vw, 2.8rem)', color: isNext ? '#fcd34d' : 'rgba(251,191,36,0.7)', fontVariantNumeric: 'tabular-nums' }}>
+                          {prayer.time}
+                        </span>
+                      </div>
+                    )
+                  })
+                )}
+              </div>
+
+              {/* Ayat footer */}
+              <div style={{ flexShrink: 0, padding: '0.8vh 1.5vw', textAlign: 'center', borderTop: '1px solid rgba(52,211,153,0.12)', background: 'rgba(0,0,0,0.22)' }}>
+                <p style={{ fontSize: 'clamp(12px, 1.1vw, 17px)', color: 'rgba(251,191,36,0.45)', fontFamily: "'Amiri', serif" }}>
+                  حَافِظُوا عَلَى الصَّلَوَاتِ وَالصَّلَاةِ الْوُسْطَىٰ
+                </p>
+                <p style={{ fontSize: 'clamp(10px, 0.7vw, 12px)', color: 'rgba(52,211,153,0.35)', marginTop: '0.2vh' }}>
+                  Peliharalah segala sholat dan sholat wustha — Al-Baqarah: 238
+                </p>
+              </div>
+            </div>
+          </div>
+        </main>
+
+        {/* ── FOOTER ── */}
+        <footer style={{ flexShrink: 0, borderTop: '1px solid rgba(52,211,153,0.15)', paddingTop: '0.8vh', marginTop: '0.8vh', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <p style={{ fontSize: 'clamp(10px, 0.75vw, 13px)', color: 'rgba(52,211,153,0.4)' }}>© 2026 Masjid Al Ihsan Bakrie PT.CPM</p>
+          <p style={{ fontSize: 'clamp(10px, 0.75vw, 13px)', fontWeight: 600, letterSpacing: '0.2em', color: 'rgba(251,191,36,0.45)' }}>JADWAL SHOLAT DIGITAL</p>
+        </footer>
+
+      </div>{/* end safe zone */}
     </div>
   )
 }

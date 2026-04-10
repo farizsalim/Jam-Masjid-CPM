@@ -253,6 +253,23 @@ function App() {
   
   const timeToNext = getTimeToNext()
 
+  // Mode test: aktif jika URL mengandung ?test=1
+  const isTestMode = new URLSearchParams(window.location.search).get('test') === '1'
+
+  const triggerTestOverlay = (mode, prayerName) => {
+    // Harus pakai currentTime.getTime() bukan Date.now() —
+    // overlayEndRef dibandingkan dengan currentTime.getTime() di effect,
+    // yang nilainya Date.now() + offset GMT+8 (~8 jam lebih besar dari Date.now() murni)
+    const nowMs = currentTime ? currentTime.getTime() : (Date.now() + (timeOffsetRef.current ?? GMT8_MS))
+    overlayEndRef.current = nowMs + (mode === 'adhan' ? 3 : 5) * 60 * 1000
+    setOverlayMode(mode)
+    setOverlayPrayerName(prayerName)
+  }
+  const resetOverlay = () => {
+    setOverlayMode(null)
+    overlayEndRef.current = null
+  }
+
   // Hitung sisa detik overlay
   const overlaySecondsLeft = overlayMode && overlayEndRef.current && currentTime
     ? Math.max(0, Math.ceil((overlayEndRef.current - currentTime.getTime()) / 1000))
@@ -264,6 +281,37 @@ function App() {
   return (
     /* Root: fixed inset-0 — lebih reliable dari h-screen di Android TV browser */
     <div className="font-sans" style={{ position: 'fixed', inset: 0, overflow: 'hidden', background: '#060f08' }}>
+
+      {/* ─── TEST PANEL (hanya muncul jika ?test=1 di URL) ─── */}
+      {isTestMode && (
+        <div style={{
+          position: 'fixed', bottom: '2vh', left: '50%', transform: 'translateX(-50%)',
+          zIndex: 200, display: 'flex', gap: '0.8vw', flexWrap: 'wrap', justifyContent: 'center',
+          background: 'rgba(0,0,0,0.85)', padding: '1vh 1.5vw', borderRadius: '12px',
+          border: '1px solid rgba(251,191,36,0.4)'
+        }}>
+          <span style={{ color: '#fbbf24', fontSize: 'clamp(10px, 0.9vw, 14px)', fontWeight: 700, letterSpacing: '0.15em', alignSelf: 'center', marginRight: '0.5vw' }}>🧪 TEST:</span>
+          {['Subuh','Dzuhur','Ashar','Maghrib','Isya'].map(name => (
+            <button key={name} onClick={() => triggerTestOverlay('adhan', name)} style={{
+              padding: '0.6vh 1vw', borderRadius: '8px', border: '1px solid rgba(251,191,36,0.5)',
+              background: 'rgba(251,191,36,0.12)', color: '#fde68a', cursor: 'pointer',
+              fontSize: 'clamp(10px, 0.9vw, 14px)', fontWeight: 700
+            }}>Adzan {name}</button>
+          ))}
+          {['Subuh','Dzuhur','Ashar','Maghrib','Isya'].map(name => (
+            <button key={`iq-${name}`} onClick={() => triggerTestOverlay('iqamah', name)} style={{
+              padding: '0.6vh 1vw', borderRadius: '8px', border: '1px solid rgba(99,102,241,0.5)',
+              background: 'rgba(99,102,241,0.12)', color: '#c7d2fe', cursor: 'pointer',
+              fontSize: 'clamp(10px, 0.9vw, 14px)', fontWeight: 700
+            }}>Iqamah {name}</button>
+          ))}
+          <button onClick={resetOverlay} style={{
+            padding: '0.6vh 1vw', borderRadius: '8px', border: '1px solid rgba(248,113,113,0.5)',
+            background: 'rgba(248,113,113,0.12)', color: '#fca5a5', cursor: 'pointer',
+            fontSize: 'clamp(10px, 0.9vw, 14px)', fontWeight: 700
+          }}>✕ Reset</button>
+        </div>
+      )}
 
       {/* ─── OVERLAY ADZAN / IQAMAH (full screen, z-index 100) ─── */}
       {overlayMode && (
